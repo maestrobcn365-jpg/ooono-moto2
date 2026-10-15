@@ -1,18 +1,25 @@
 {
+  "id": "/ooono-moto/",
   "name": "OOONO Moto CAT Pro",
   "short_name": "OOONO Moto",
   "description": "Avisador de radares y helicópteros para moto en Catalunya",
-  "start_url": "./index.html",
-  "scope": "./",
+  "start_url": "/ooono-moto/index.html?auto=1",
+  "scope": "/ooono-moto/",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='115' fill='%23000000'/%3E%3Ccircle cx='256' cy='256' r='210' fill='none' stroke='%23ff0033' stroke-width='36'/%3E%3Ccircle cx='256' cy='256' r='145' fill='%231f2937'/%3E%3Ctext x='256' y='295' font-family='sans-serif' font-size='115' font-weight='900' fill='%23ffffff' text-anchor='middle'%3E80%3C/text%3E%3C/svg%3E",
-      "sizes": "192x192 512x512",
-      "type": "image/svg+xml",
+      "src": "https://cdn-icons-png.flaticon.com/192/2555/2555013.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2555/2555013.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]
