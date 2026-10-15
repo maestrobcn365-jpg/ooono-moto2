@@ -372,9 +372,7 @@ async function triggerInstall() {
   }
 }
 
-// MEGA BASE DE DATOS ESTÁTICA MASIVA DE CATALUNYA (Más de 500 puntos fijos, tramos y semáforos integrados)
 const CATALUNYA_STATIC_RADARS = [
-  // BARCELONA CAPITAL Y RONDAS
   { id: 'bcn-1', lat: 41.4162, lon: 2.1592, vmax: 60, type: 'TRAMO', name: 'Túnel de la Rovira' },
   { id: 'bcn-2', lat: 41.3789, lon: 2.1281, vmax: 60, type: 'TRAMO', name: 'Túnel de Badal' },
   { id: 'bcn-3', lat: 41.4038, lon: 2.1872, vmax: 50, type: 'TRAMO', name: 'Túnel de les Glòries' },
@@ -405,16 +403,6 @@ const CATALUNYA_STATIC_RADARS = [
   { id: 'bcn-28', lat: 41.4285, lon: 2.1865, vmax: 50, type: 'FIJO', name: 'Av. Meridiana 408' },
   { id: 'bcn-29', lat: 41.4450, lon: 2.1868, vmax: 50, type: 'FIJO', name: 'Av. Meridiana 564 (Salida BCN)' },
   { id: 'bcn-30', lat: 41.3742, lon: 2.1685, vmax: 50, type: 'FIJO', name: 'Av. Paral·lel 112' },
-  { id: 'bcn-31', lat: 41.3935, lon: 2.1210, vmax: 30, type: 'FIJO', name: 'Carrer Iradier / Bonanova' },
-  { id: 'bcn-32', lat: 41.4112, lon: 2.1398, vmax: 50, type: 'FIJO', name: 'Ronda General Mitre 79' },
-  { id: 'bcn-33', lat: 41.3812, lon: 2.1825, vmax: 50, type: 'FIJO', name: 'Passeig Isabel II / Via Laietana' },
-  { id: 'bcn-34', lat: 41.4148, lon: 2.1745, vmax: 30, type: 'FIJO', name: 'Carrer Indústria 251' },
-  { id: 'bcn-35', lat: 41.3792, lon: 2.1380, vmax: 30, type: 'FIJO', name: 'Carrer Creu Coberta / Sants' },
-  { id: 'bcn-36', lat: 41.4090, lon: 2.1550, vmax: 30, type: 'FIJO', name: 'Travessera de Dalt / Gràcia' },
-  { id: 'bcn-37', lat: 41.3965, lon: 2.1815, vmax: 50, type: 'SEMÁFORO', name: 'Av. Meridiana / Marina' },
-  { id: 'bcn-38', lat: 41.3620, lon: 2.1355, vmax: 50, type: 'FIJO', name: 'Passeig Zona Franca' },
-
-  // AUTOPISTAS Y RED CATALUNYA (A-2, AP-7, C-31, C-32, C-58, C-16, C-17, N-340)
   { id: 'cat-1', lat: 41.5432, lon: 1.8721, vmax: 100, type: 'FIJO', name: 'A-2 Esparreguera / Collbató' },
   { id: 'cat-2', lat: 41.5680, lon: 1.7850, vmax: 100, type: 'FIJO', name: 'A-2 el Bruc (Montserrat)' },
   { id: 'cat-3', lat: 41.5810, lon: 1.6320, vmax: 120, type: 'FIJO', name: 'A-2 Igualada / Jorba' },
@@ -444,26 +432,7 @@ const CATALUNYA_STATIC_RADARS = [
   { id: 'cat-27', lat: 41.4710, lon: 2.0620, vmax: 90, type: 'TRAMO', name: 'C-16 Túneles de Vallvidrera' },
   { id: 'cat-28', lat: 41.6820, lon: 1.8540, vmax: 100, type: 'FIJO', name: 'C-16 Manresa / Sant Fruitós' },
   { id: 'cat-29', lat: 41.6120, lon: 1.8620, vmax: 80, type: 'FIJO', name: 'C-55 Castellgalí / Monistrol' },
-  { id: 'cat-30', lat: 41.5640, lon: 2.2610, vmax: 80, type: 'FIJO', name: 'C-17 Parets / Montmeló' },
-  { id: 'cat-31', lat: 41.6420, lon: 2.2750, vmax: 100, type: 'FIJO', name: 'C-17 Lliçà / La Garriga' },
-  { id: 'cat-32', lat: 41.7850, lon: 2.2410, vmax: 80, type: 'FIJO', name: 'C-17 Tagamanent / Centelles' },
-  { id: 'cat-33', lat: 41.4420, lon: 2.2410, vmax: 80, type: 'FIJO', name: 'C-31 Badalona' },
-  { id: 'cat-34', lat: 41.4910, lon: 2.3210, vmax: 100, type: 'FIJO', name: 'C-32 Alella / El Masnou' },
-  { id: 'cat-35', lat: 41.5180, lon: 2.4120, vmax: 100, type: 'FIJO', name: 'C-32 Mataró / Cabrera de Mar' },
-  { id: 'cat-36', lat: 41.5820, lon: 2.5410, vmax: 100, type: 'FIJO', name: 'C-32 Arenys / Caldes d\'Estrac' },
-  { id: 'cat-37', lat: 41.6350, lon: 2.6810, vmax: 100, type: 'TRAMO', name: 'C-32 Túnel Calella / Pineda' },
-  // ZONAS GIRONA, TARRAGONA Y LLEIDA (Ampliación masiva provincial)
-  { id: 'girona-1', lat: 41.9794, lon: 2.8214, vmax: 120, type: 'FIJO', name: 'AP-7 Girona Sud / Salt' },
-  { id: 'girona-2', lat: 42.0125, lon: 2.8450, vmax: 120, type: 'FIJO', name: 'AP-7 Girona Nord' },
-  { id: 'girona-3', lat: 41.8210, lon: 3.0650, vmax: 90, type: 'FIJO', name: 'C-35 Llagostera' },
-  { id: 'girona-4', lat: 41.7890, lon: 2.9810, vmax: 100, type: 'FIJO', name: 'C-65 Cassà de la Selva' },
-  { id: 'girona-5', lat: 42.2650, lon: 2.9540, vmax: 100, type: 'FIJO', name: 'A-2 Borrassà / Figueres' },
-  { id: 'tarragona-1', lat: 41.1180, lon: 1.2450, vmax: 120, type: 'FIJO', name: 'AP-7 Tarragona / Vila-seca' },
-  { id: 'tarragona-2', lat: 41.0850, lon: 1.1540, vmax: 100, type: 'FIJO', name: 'A-7 Reus / Tarragona' },
-  { id: 'tarragona-3', lat: 41.1520, lon: 1.3540, vmax: 100, type: 'FIJO', name: 'T-11 Tarragona / Reus' },
-  { id: 'tarragona-4', lat: 40.7120, lon: 0.5840, vmax: 100, type: 'FIJO', name: 'N-340 l\'Ampolla / L'Ametlla' },
-  { id: 'lleida-1', lat: 41.6120, lon: 0.6250, vmax: 120, type: 'FIJO', name: 'A-2 Lleida / Alcarràs' },
-  { id: 'lleida-2', lat: 41.6540, lon: 0.7120, vmax: 100, type: 'FIJO', name: 'LL-11 Entrada Lleida' }
+  { id: 'cat-30', lat: 41.5640, lon: 2.2610, vmax: 80, type: 'FIJO', name: 'C-17 Parets / Montmeló' }
 ];
 
 let systemRunning = false;
@@ -502,36 +471,30 @@ function showPushNotification(title, body) {
 }
 
 function playOoonoBeep(pattern = 'RADAR') {
-  if (!audioCtx) {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    audioCtx = new AudioContext();
-  }
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-
-  const now = audioCtx.currentTime;
-  const tone = (freq, start, duration, wave = 'sawtooth') => {
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = wave;
-    osc.frequency.setValueAtTime(freq, now + start);
-    gain.gain.setValueAtTime(1.0, now + start);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + start + duration);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start(now + start);
-    osc.stop(now + start + duration);
-  };
-
-  if (pattern === 'RADAR') {
-    tone(2500, 0, 0.15); tone(2500, 0.20, 0.15); tone(2900, 0.42, 0.28);
-  } else if (pattern === 'OVERSPEED') {
-    tone(3200, 0, 0.14, 'square'); tone(2200, 0.16, 0.14, 'square');
-    tone(3200, 0.32, 0.14, 'square'); tone(2200, 0.48, 0.20, 'square');
-  } else if (pattern === 'HELI') {
-    tone(1200, 0, 0.16); tone(1800, 0.18, 0.16); tone(2700, 0.36, 0.30);
-  } else if (pattern === 'OFF') {
-    tone(1800, 0, 0.18, 'sine'); tone(900, 0.20, 0.28, 'sine');
-  }
+  try {
+    if (!audioCtx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioContext();
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const now = audioCtx.currentTime;
+    const tone = (freq, start, duration, wave = 'sawtooth') => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = wave;
+      osc.frequency.setValueAtTime(freq, now + start);
+      gain.gain.setValueAtTime(1.0, now + start);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + start + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now + start);
+      osc.stop(now + start + duration);
+    };
+    if (pattern === 'RADAR') { tone(2500, 0, 0.15); tone(2500, 0.20, 0.15); tone(2900, 0.42, 0.28); }
+    else if (pattern === 'OVERSPEED') { tone(3200, 0, 0.14, 'square'); tone(2200, 0.16, 0.14, 'square'); }
+    else if (pattern === 'HELI') { tone(1200, 0, 0.16); tone(1800, 0.18, 0.16); }
+    else if (pattern === 'OFF') { tone(1800, 0, 0.18, 'sine'); }
+  } catch (e) {}
 }
 
 function speakAlert(text, beepPattern = 'RADAR', pushTitle = '⚠️ Alerta de Radar') {
@@ -543,8 +506,6 @@ function speakAlert(text, beepPattern = 'RADAR', pushTitle = '⚠️ Alerta de R
       const msg = new SpeechSynthesisUtterance(text);
       msg.lang = 'es-ES';
       msg.rate = 1.05;
-      msg.pitch = 1.0;
-      msg.volume = 1.0;
       window.speechSynthesis.speak(msg);
     }
   }, 700);
@@ -552,11 +513,6 @@ function speakAlert(text, beepPattern = 'RADAR', pushTitle = '⚠️ Alerta de R
 
 async function startSystem() {
   systemRunning = true;
-
-  const mediaAudio = document.getElementById('persistentAudio');
-  mediaAudio.volume = 0.05;
-  mediaAudio.play().catch(() => {});
-
   document.getElementById('statusDot').className = 'dot active';
   document.getElementById('statusText').innerText = 'Protección Activa (2º Plano)';
   document.getElementById('speedDisplay').innerText = '0';
@@ -567,7 +523,11 @@ async function startSystem() {
   stopBtn.className = 'btn btn-stop';
   stopBtn.innerText = '⏹️ APAGAR RADAR Y GPS (ACTIVO)';
 
-  showPushNotification('🛡️ OOONO Moto Protegido', 'Servicio multimedia activo en la barra de estado.');
+  try {
+    const mediaAudio = document.getElementById('persistentAudio');
+    mediaAudio.volume = 0.05;
+    mediaAudio.play().catch(() => {});
+  } catch (e) {}
 
   if ('wakeLock' in navigator) {
     try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
@@ -603,8 +563,7 @@ async function stopSystem() {
     clearInterval(heliIntervalId);
     heliIntervalId = null;
   }
-  const mediaAudio = document.getElementById('persistentAudio');
-  mediaAudio.pause();
+  try { document.getElementById('persistentAudio').pause(); } catch (e) {}
 
   if (wakeLock !== null) {
     try { await wakeLock.release(); } catch (e) {}
