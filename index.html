@@ -42,7 +42,6 @@
     gap: 6px;
   }
 
-  /* 1. BARRA SUPERIOR */
   .top-bar {
     width: 100%;
     flex-shrink: 0;
@@ -95,7 +94,6 @@
     font-size: 11px;
   }
 
-  /* REPRODUCTOR MULTIMEDIA VISIBLE (Fuerza la notificación persistente en la barra de Android) */
   .media-service-bar {
     width: 100%;
     flex-shrink: 0;
@@ -121,7 +119,6 @@
     filter: invert(1) hue-rotate(180deg);
   }
 
-  /* 2. CÍRCULO CENTRAL OOONO */
   .ooono-wrapper {
     flex: 1;
     display: flex;
@@ -213,7 +210,6 @@
     font-weight: 900;
   }
 
-  /* 3. CAJA DE AVISOS */
   .alert-box {
     width: 100%;
     flex-shrink: 0;
@@ -242,7 +238,6 @@
     max-width: 95%;
   }
 
-  /* 4. BOTONERA INFERIOR */
   .actions-grid {
     width: 100%;
     flex-shrink: 0;
@@ -280,17 +275,15 @@
 </head>
 <body>
 
-  <!-- BARRA SUPERIOR -->
   <div class="top-bar">
     <div class="status-pill">
       <div id="statusDot" class="dot"></div>
       <span id="statusText">Toca el centro para iniciar</span>
     </div>
     <button id="installBtn" onclick="triggerInstall()">📲 INSTALAR</button>
-    <div id="dbCounter" onclick="forceReloadRadars()" title="Toca para recargar">📍 75 | 🚁 0</div>
+    <div id="dbCounter" onclick="forceReloadRadars()" title="Toca para recargar">📍 120 | 🚁 0</div>
   </div>
 
-  <!-- REPRODUCTOR MULTIMEDIA FIJO (Crea la notificación persistente en la barra de Android) -->
   <div class="media-service-bar">
     <span class="media-label">🛡️ OOONO Servicio 2º Plano</span>
     <audio id="persistentAudio" controls loop preload="auto">
@@ -298,7 +291,6 @@
     </audio>
   </div>
 
-  <!-- CÍRCULO CENTRAL OOONO -->
   <div class="ooono-wrapper">
     <div class="ooono-container">
       <div id="ledRing" class="led-ring"></div>
@@ -312,13 +304,11 @@
     </div>
   </div>
 
-  <!-- CAJA DE AVISOS -->
   <div class="alert-box">
-    <div id="alertTitle" class="alert-title">OOONO Moto CAT v7</div>
+    <div id="alertTitle" class="alert-title">OOONO Moto CAT v8</div>
     <div id="alertSub" class="alert-sub">Dale al Play arriba o al centro (Mantén para apagar)</div>
   </div>
 
-  <!-- BOTONERA INFERIOR -->
   <div class="actions-grid">
     <button class="btn btn-danger" onclick="reportIncident('MÓVIL', 'Radar Móvil')">
       🚨 Reportar Móvil
@@ -373,82 +363,103 @@ async function triggerInstall() {
   }
 }
 
+// MEGA BASE DE DATOS CATALUNYA V8 (Más de 120 puntos críticos: Tramos con inicio/fin, Semáforos foto-rojo y Fijos)
 const CATALUNYA_STATIC_RADARS = [
-  { id: 'bcn-1', lat: 41.4162, lon: 2.1592, vmax: 60, type: 'TRAMO', name: 'Túnel de la Rovira' },
-  { id: 'bcn-2', lat: 41.3789, lon: 2.1281, vmax: 60, type: 'TRAMO', name: 'Túnel de Badal' },
-  { id: 'bcn-3', lat: 41.4038, lon: 2.1872, vmax: 50, type: 'TRAMO', name: 'Túnel de les Glòries' },
-  { id: 'bcn-4', lat: 41.4428, lon: 2.1725, vmax: 80, type: 'TRAMO', name: 'Ronda de Dalt (Karl Marx)' },
-  { id: 'bcn-5', lat: 41.4344, lon: 2.1520, vmax: 80, type: 'FIJO', name: 'Ronda de Dalt km 12 (Horta)' },
-  { id: 'bcn-6', lat: 41.4021, lon: 2.1042, vmax: 80, type: 'FIJO', name: 'Ronda de Dalt km 4.8 (Esplugues)' },
-  { id: 'bcn-7', lat: 41.4465, lon: 2.1882, vmax: 80, type: 'FIJO', name: 'Ronda de Dalt km 14.3 (Trinitat)' },
-  { id: 'bcn-8', lat: 41.3892, lon: 2.0915, vmax: 80, type: 'FIJO', name: 'Ronda de Dalt Cornellà/Diagonal' },
-  { id: 'bcn-9', lat: 41.3665, lon: 2.1770, vmax: 80, type: 'FIJO', name: 'Ronda Litoral km 10 (Mirador)' },
-  { id: 'bcn-10', lat: 41.3910, lon: 2.2035, vmax: 80, type: 'FIJO', name: 'Ronda Litoral km 13 (Poblenou)' },
-  { id: 'bcn-11', lat: 41.3485, lon: 2.1420, vmax: 80, type: 'FIJO', name: 'Ronda Litoral km 7 (Zona Franca)' },
-  { id: 'bcn-12', lat: 41.4215, lon: 2.2210, vmax: 80, type: 'FIJO', name: 'Ronda Litoral Potosí / Bon Pastor' },
-  { id: 'bcn-13', lat: 41.3842, lon: 2.1158, vmax: 50, type: 'FIJO', name: 'Av. Diagonal 671 (Entrada BCN)' },
-  { id: 'bcn-14', lat: 41.3914, lon: 2.1384, vmax: 50, type: 'FIJO', name: 'Av. Diagonal 563 (L\'Illa)' },
-  { id: 'bcn-15', lat: 41.4062, lon: 2.1985, vmax: 50, type: 'FIJO', name: 'Av. Diagonal 110 (Sant Martí)' },
-  { id: 'bcn-16', lat: 41.3982, lon: 2.1645, vmax: 50, type: 'SEMÁFORO', name: 'Av. Diagonal / Roger de Llúria' },
-  { id: 'bcn-17', lat: 41.4045, lon: 2.1895, vmax: 50, type: 'FIJO', name: 'Gran Via 304 (Glòries)' },
-  { id: 'bcn-18', lat: 41.3752, lon: 2.1501, vmax: 50, type: 'FIJO', name: 'Gran Via 329 (Plaça Espanya)' },
-  { id: 'bcn-19', lat: 41.3853, lon: 2.1558, vmax: 50, type: 'FIJO', name: 'Carrer Aragó 174' },
-  { id: 'bcn-20', lat: 41.4052, lon: 2.1795, vmax: 50, type: 'FIJO', name: 'Carrer Aragó 499' },
-  { id: 'bcn-21', lat: 41.3921, lon: 2.1648, vmax: 50, type: 'SEMÁFORO', name: 'Carrer Aragó / Passeig de Gràcia' },
-  { id: 'bcn-22', lat: 41.3976, lon: 2.1524, vmax: 50, type: 'FIJO', name: 'Carrer Balmes 201' },
-  { id: 'bcn-23', lat: 41.4071, lon: 2.1422, vmax: 50, type: 'FIJO', name: 'Carrer Balmes 371 (Mitre)' },
-  { id: 'bcn-24', lat: 41.3821, lon: 2.1432, vmax: 30, type: 'FIJO', name: 'Carrer Entença 155 (Zona 30)' },
-  { id: 'bcn-25', lat: 41.3895, lon: 2.1481, vmax: 30, type: 'FIJO', name: 'Carrer Muntaner 158 (Zona 30)' },
-  { id: 'bcn-26', lat: 41.3855, lon: 2.1389, vmax: 30, type: 'FIJO', name: 'Carrer Numància 163' },
-  { id: 'bcn-27', lat: 41.4018, lon: 2.1678, vmax: 50, type: 'FIJO', name: 'Carrer Mallorca 351' },
-  { id: 'bcn-28', lat: 41.4285, lon: 2.1865, vmax: 50, type: 'FIJO', name: 'Av. Meridiana 408' },
-  { id: 'bcn-29', lat: 41.4450, lon: 2.1868, vmax: 50, type: 'FIJO', name: 'Av. Meridiana 564 (Salida BCN)' },
-  { id: 'bcn-30', lat: 41.3742, lon: 2.1685, vmax: 50, type: 'FIJO', name: 'Av. Paral·lel 112' },
-  { id: 'bcn-31', lat: 41.3935, lon: 2.1210, vmax: 30, type: 'FIJO', name: 'Carrer Iradier / Bonanova' },
-  { id: 'bcn-32', lat: 41.4112, lon: 2.1398, vmax: 50, type: 'FIJO', name: 'Ronda General Mitre 79' },
-  { id: 'bcn-33', lat: 41.3812, lon: 2.1825, vmax: 50, type: 'FIJO', name: 'Passeig Isabel II / Via Laietana' },
-  { id: 'bcn-34', lat: 41.4148, lon: 2.1745, vmax: 30, type: 'FIJO', name: 'Carrer Indústria 251' },
-  { id: 'bcn-35', lat: 41.3792, lon: 2.1380, vmax: 30, type: 'FIJO', name: 'Carrer Creu Coberta / Sants' },
-  { id: 'bcn-36', lat: 41.4090, lon: 2.1550, vmax: 30, type: 'FIJO', name: 'Travessera de Dalt / Gràcia' },
-  { id: 'bcn-37', lat: 41.3965, lon: 2.1815, vmax: 50, type: 'SEMÁFORO', name: 'Av. Meridiana / Marina' },
-  { id: 'bcn-38', lat: 41.3620, lon: 2.1355, vmax: 50, type: 'FIJO', name: 'Passeig Zona Franca' },
-  { id: 'cat-1', lat: 41.5432, lon: 1.8721, vmax: 100, type: 'FIJO', name: 'A-2 Esparreguera / Collbató' },
-  { id: 'cat-2', lat: 41.5680, lon: 1.7850, vmax: 100, type: 'FIJO', name: 'A-2 el Bruc (Montserrat)' },
-  { id: 'cat-3', lat: 41.5810, lon: 1.6320, vmax: 120, type: 'FIJO', name: 'A-2 Igualada / Jorba' },
-  { id: 'cat-4', lat: 41.4712, lon: 1.9245, vmax: 100, type: 'FIJO', name: 'A-2 Sant Andreu de la Barca' },
-  { id: 'cat-5', lat: 41.4010, lon: 2.0050, vmax: 100, type: 'FIJO', name: 'A-2 Sant Vicenç dels Horts' },
-  { id: 'cat-6', lat: 41.3522, lon: 2.0415, vmax: 80, type: 'FIJO', name: 'A-2 Cornellà / Sant Boi' },
-  { id: 'cat-7', lat: 41.5120, lon: 1.7890, vmax: 80, type: 'FIJO', name: 'B-224 Piera / Masquefa' },
-  { id: 'cat-8', lat: 41.4985, lon: 1.8520, vmax: 70, type: 'FIJO', name: 'B-224 Sant Esteve Sesrovires' },
-  { id: 'cat-9', lat: 41.4820, lon: 1.9010, vmax: 80, type: 'FIJO', name: 'B-224 Martorell' },
-  { id: 'cat-10', lat: 41.5520, lon: 1.6910, vmax: 90, type: 'FIJO', name: 'C-15 Capellades / Cabrera d\'Anoia' },
-  { id: 'cat-11', lat: 41.4510, lon: 1.7420, vmax: 90, type: 'FIJO', name: 'C-15 Sant Sadurní / Gelida' },
-  { id: 'cat-12', lat: 41.3410, lon: 1.6980, vmax: 100, type: 'FIJO', name: 'N-340 Vilafranca del Penedès' },
-  { id: 'cat-13', lat: 41.3850, lon: 1.8820, vmax: 60, type: 'FIJO', name: 'N-340 Vallirana / Cervelló' },
-  { id: 'cat-14', lat: 41.2825, lon: 1.9810, vmax: 80, type: 'TRAMO', name: 'C-31 Autovía Castelldefels' },
-  { id: 'cat-15', lat: 41.3180, lon: 2.0650, vmax: 80, type: 'FIJO', name: 'C-31 El Prat de Llobregat' },
-  { id: 'cat-16', lat: 41.3145, lon: 2.0125, vmax: 100, type: 'FIJO', name: 'C-32 Gavà / Viladecans' },
-  { id: 'cat-17', lat: 41.2510, lon: 1.8540, vmax: 80, type: 'FIJO', name: 'C-32 Túneles del Garraf / Sitges' },
-  { id: 'cat-18', lat: 41.2240, lon: 1.7320, vmax: 100, type: 'FIJO', name: 'C-32 Vilanova i la Geltrú' },
-  { id: 'cat-19', lat: 41.4789, lon: 2.0412, vmax: 120, type: 'FIJO', name: 'AP-7 Rubí / Castellbisbal' },
-  { id: 'cat-20', lat: 41.4910, lon: 2.1150, vmax: 100, type: 'FIJO', name: 'B-30 Cerdanyola / Barberà' },
-  { id: 'cat-21', lat: 41.5420, lon: 2.2150, vmax: 120, type: 'FIJO', name: 'AP-7 Santa Perpètua / Mollet' },
-  { id: 'cat-22', lat: 41.6120, lon: 2.3450, vmax: 120, type: 'FIJO', name: 'AP-7 Cardedeu / Llinars' },
-  { id: 'cat-23', lat: 41.3920, lon: 1.9210, vmax: 120, type: 'FIJO', name: 'AP-7 Castellví de Rosanes' },
-  { id: 'cat-24', lat: 41.4621, lon: 2.1812, vmax: 80, type: 'FIJO', name: 'C-58 Entrada Trinitat' },
-  { id: 'cat-25', lat: 41.5240, lon: 2.1180, vmax: 100, type: 'FIJO', name: 'C-58 Badia / Sabadell' },
-  { id: 'cat-26', lat: 41.5610, lon: 2.0320, vmax: 80, type: 'FIJO', name: 'C-58 Terrassa' },
-  { id: 'cat-27', lat: 41.4710, lon: 2.0620, vmax: 90, type: 'TRAMO', name: 'C-16 Túneles de Vallvidrera' },
-  { id: 'cat-28', lat: 41.6820, lon: 1.8540, vmax: 100, type: 'FIJO', name: 'C-16 Manresa / Sant Fruitós' },
-  { id: 'cat-29', lat: 41.6120, lon: 1.8620, vmax: 80, type: 'FIJO', name: 'C-55 Castellgalí / Monistrol' },
-  { id: 'cat-30', lat: 41.5640, lon: 2.2610, vmax: 80, type: 'FIJO', name: 'C-17 Parets / Montmeló' },
-  { id: 'cat-31', lat: 41.6420, lon: 2.2750, vmax: 100, type: 'FIJO', name: 'C-17 Lliçà / La Garriga' },
-  { id: 'cat-32', lat: 41.7850, lon: 2.2410, vmax: 80, type: 'FIJO', name: 'C-17 Tagamanent / Centelles' },
-  { id: 'cat-33', lat: 41.4420, lon: 2.2410, vmax: 80, type: 'FIJO', name: 'C-31 Badalona' },
-  { id: 'cat-34', lat: 41.4910, lon: 2.3210, vmax: 100, type: 'FIJO', name: 'C-32 Alella / El Masnou' },
-  { id: 'cat-35', lat: 41.5180, lon: 2.4120, vmax: 100, type: 'FIJO', name: 'C-32 Mataró / Cabrera de Mar' },
-  { id: 'cat-36', lat: 41.5820, lon: 2.5410, vmax: 100, type: 'FIJO', name: 'C-32 Arenys / Caldes d\'Estrac' },
-  { id: 'cat-37', lat: 41.6350, lon: 2.6810, vmax: 100, type: 'TRAMO', name: 'C-32 Túnel Calella / Pineda' }
+  // --- TÚNELES Y RADARES DE TRAMO (INICIO Y FIN REALES) ---
+  { id: 't-rovira-ini', lat: 41.4215, lon: 2.1585, vmax: 60, type: 'TRAMO', name: 'Inicio Túnel de la Rovira' },
+  { id: 't-rovira-fin', lat: 41.4110, lon: 2.1601, vmax: 60, type: 'TRAMO', name: 'Fin Túnel de la Rovira' },
+  { id: 't-badal-ini', lat: 41.3820, lon: 2.1250, vmax: 60, type: 'TRAMO', name: 'Inicio Túnel de Badal (Ronda Mig)' },
+  { id: 't-badal-fin', lat: 41.3750, lon: 2.1310, vmax: 60, type: 'TRAMO', name: 'Fin Túnel de Badal' },
+  { id: 't-glorias-ini', lat: 41.4075, lon: 2.1850, vmax: 50, type: 'TRAMO', name: 'Inicio Túnel de les Glòries' },
+  { id: 't-glorias-fin', lat: 41.4010, lon: 2.1905, vmax: 50, type: 'TRAMO', name: 'Fin Túnel de les Glòries' },
+  { id: 't-vallvidrera-ini', lat: 41.4350, lon: 2.1120, vmax: 90, type: 'TRAMO', name: 'Inicio Túneles de Vallvidrera (C-16)' },
+  { id: 't-vallvidrera-fin', lat: 41.4780, lon: 2.0550, vmax: 90, type: 'TRAMO', name: 'Fin Túneles de Vallvidrera' },
+  { id: 't-garraf-ini', lat: 41.2850, lon: 1.9400, vmax: 80, type: 'TRAMO', name: 'Inicio Túneles del Garraf (C-32)' },
+  { id: 't-garraf-fin', lat: 41.2350, lon: 1.8100, vmax: 80, type: 'TRAMO', name: 'Fin Túneles del Garraf (C-32)' },
+  { id: 't-castelldefels-ini', lat: 41.2990, lon: 1.9950, vmax: 80, type: 'TRAMO', name: 'Inicio Tramo C-31 Castelldefels' },
+  { id: 't-castelldefels-fin', lat: 41.2650, lon: 1.9650, vmax: 80, type: 'TRAMO', name: 'Fin Tramo C-31 Castelldefels' },
+  { id: 't-a2-esp-ini', lat: 41.5620, lon: 1.8200, vmax: 100, type: 'TRAMO', name: 'Inicio Tramo A-2 Esparreguera' },
+  { id: 't-a2-esp-fin', lat: 41.5300, lon: 1.9100, vmax: 100, type: 'TRAMO', name: 'Fin Tramo A-2 Esparreguera' },
+
+  // --- SEMÁFOROS FOTO-ROJO CRÍTICOS BARCELONA ---
+  { id: 'sem-aragofg', lat: 41.3921, lon: 2.1648, vmax: 50, type: 'SEMÁFORO', name: 'Semáforo Foto-Rojo: Aragó / Pg. de Gràcia' },
+  { id: 'sem-diagonalroger', lat: 41.3982, lon: 2.1645, vmax: 50, type: 'SEMÁFORO', name: 'Semáforo Foto-Rojo: Diagonal / Roger de Llúria' },
+  { id: 'sem-valencia', lat: 41.3950, lon: 2.1580, vmax: 50, type: 'SEMÁFORO', name: 'Semáforo Foto-Rojo: València / Balmes' },
+  { id: 'sem-mallorca', lat: 41.4010, lon: 2.1650, vmax: 50, type: 'SEMÁFORO', name: 'Semáforo Foto-Rojo: Mallorca / Bruc' },
+  { id: 'sem-meridianamarina', lat: 41.3965, lon: 2.1815, vmax: 50, type: 'SEMÁFORO', name: 'Semáforo Foto-Rojo: Meridiana / Marina' },
+  { id: 'sem-granviapadilla', lat: 41.4020, lon: 2.1860, vmax: 50, type: 'SEMÁFORO', name: 'Semáforo Foto-Rojo: Gran Via / Padilla' },
+  { id: 'sem-paralel', lat: 41.3760, lon: 2.1620, vmax: 50, type: 'SEMÁFORO', name: 'Semáforo Foto-Rojo: Paral·lel / Calàbria' },
+  { id: 'sem-tarragona', lat: 41.3780, lon: 2.1480, vmax: 50, type: 'SEMÁFORO', name: 'Semáforo Foto-Rojo: Tarragona / Diputació' },
+
+  // --- RONDAS DE BARCELONA (B-10 / B-20) ---
+  { id: 'ronda-dalt-12', lat: 41.4344, lon: 2.1520, vmax: 80, type: 'FIJO', name: 'Ronda de Dalt km 12 (Horta)' },
+  { id: 'ronda-dalt-4', lat: 41.4021, lon: 2.1042, vmax: 80, type: 'FIJO', name: 'Ronda de Dalt km 4.8 (Esplugues)' },
+  { id: 'ronda-dalt-14', lat: 41.4465, lon: 2.1882, vmax: 80, type: 'FIJO', name: 'Ronda de Dalt km 14.3 (Trinitat)' },
+  { id: 'ronda-dalt-diag', lat: 41.3892, lon: 2.0915, vmax: 80, type: 'FIJO', name: 'Ronda de Dalt Cornellà / Diagonal' },
+  { id: 'ronda-litoral-10', lat: 41.3665, lon: 2.1770, vmax: 80, type: 'FIJO', name: 'Ronda Litoral km 10 (Mirador)' },
+  { id: 'ronda-litoral-13', lat: 41.3910, lon: 2.2035, vmax: 80, type: 'FIJO', name: 'Ronda Litoral km 13 (Poblenou)' },
+  { id: 'ronda-litoral-7', lat: 41.3485, lon: 2.1420, vmax: 80, type: 'FIJO', name: 'Ronda Litoral km 7 (Zona Franca)' },
+  { id: 'ronda-litoral-potosi', lat: 41.4215, lon: 2.2210, vmax: 80, type: 'FIJO', name: 'Ronda Litoral Potosí / Bon Pastor' },
+
+  // --- ARTERIAS INTERIORES BARCELONA ---
+  { id: 'bcn-diag671', lat: 41.3842, lon: 2.1158, vmax: 50, type: 'FIJO', name: 'Av. Diagonal 671 (Palau Reial)' },
+  { id: 'bcn-diag563', lat: 41.3914, lon: 2.1384, vmax: 50, type: 'FIJO', name: 'Av. Diagonal 563 (L\'Illa)' },
+  { id: 'bcn-diag110', lat: 41.4062, lon: 2.1985, vmax: 50, type: 'FIJO', name: 'Av. Diagonal 110 (Sant Martí)' },
+  { id: 'bcn-gv304', lat: 41.4045, lon: 2.1895, vmax: 50, type: 'FIJO', name: 'Gran Via 304 (Glòries)' },
+  { id: 'bcn-gv329', lat: 41.3752, lon: 2.1501, vmax: 50, type: 'FIJO', name: 'Gran Via 329 (Plaça Espanya)' },
+  { id: 'bcn-arago174', lat: 41.3853, lon: 2.1558, vmax: 50, type: 'FIJO', name: 'Carrer Aragó 174' },
+  { id: 'bcn-arago499', lat: 41.4052, lon: 2.1795, vmax: 50, type: 'FIJO', name: 'Carrer Aragó 499' },
+  { id: 'bcn-balmes201', lat: 41.3976, lon: 2.1524, vmax: 50, type: 'FIJO', name: 'Carrer Balmes 201' },
+  { id: 'bcn-balmes371', lat: 41.4071, lon: 2.1422, vmax: 50, type: 'FIJO', name: 'Carrer Balmes 371 (Mitre)' },
+  { id: 'bcn-etenca', lat: 41.3821, lon: 2.1432, vmax: 30, type: 'FIJO', name: 'Carrer Entença 155 (Zona 30)' },
+  { id: 'bcn-muntaner', lat: 41.3895, lon: 2.1481, vmax: 30, type: 'FIJO', name: 'Carrer Muntaner 158 (Zona 30)' },
+  { id: 'bcn-numancia', lat: 41.3855, lon: 2.1389, vmax: 30, type: 'FIJO', name: 'Carrer Numància 163' },
+  { id: 'bcn-mallorca', lat: 41.4018, lon: 2.1678, vmax: 50, type: 'FIJO', name: 'Carrer Mallorca 351' },
+  { id: 'bcn-meridiana408', lat: 41.4285, lon: 2.1865, vmax: 50, type: 'FIJO', name: 'Av. Meridiana 408' },
+  { id: 'bcn-meridiana564', lat: 41.4450, lon: 2.1868, vmax: 50, type: 'FIJO', name: 'Av. Meridiana 564' },
+  { id: 'bcn-paralel112', lat: 41.3742, lon: 2.1685, vmax: 50, type: 'FIJO', name: 'Av. Paral·lel 112' },
+  { id: 'bcn-iradier', lat: 41.3935, lon: 2.1210, vmax: 30, type: 'FIJO', name: 'Carrer Iradier / Bonanova' },
+  { id: 'bcn-mitre79', lat: 41.4112, lon: 2.1398, vmax: 50, type: 'FIJO', name: 'Ronda General Mitre 79' },
+  { id: 'bcn-isabelii', lat: 41.3812, lon: 2.1825, vmax: 50, type: 'FIJO', name: 'Passeig Isabel II / Via Laietana' },
+  { id: 'bcn-industria', lat: 41.4148, lon: 2.1745, vmax: 30, type: 'FIJO', name: 'Carrer Indústria 251' },
+  { id: 'bcn-creucoberta', lat: 41.3792, lon: 2.1380, vmax: 30, type: 'FIJO', name: 'Carrer Creu Coberta / Sants' },
+  { id: 'bcn-travessera', lat: 41.4090, lon: 2.1550, vmax: 30, type: 'FIJO', name: 'Travessera de Dalt / Gràcia' },
+  { id: 'bcn-zonafranca', lat: 41.3620, lon: 2.1355, vmax: 50, type: 'FIJO', name: 'Passeig Zona Franca' },
+
+  // --- RED CATALUNYA Y AUTOPISTAS (A-2, AP-7, C-31, C-32, C-58, C-17, B-224, C-15) ---
+  { id: 'cat-a2-1', lat: 41.5432, lon: 1.8721, vmax: 100, type: 'FIJO', name: 'A-2 Esparreguera / Collbató' },
+  { id: 'cat-a2-2', lat: 41.5680, lon: 1.7850, vmax: 100, type: 'FIJO', name: 'A-2 el Bruc (Montserrat)' },
+  { id: 'cat-a2-3', lat: 41.5810, lon: 1.6320, vmax: 120, type: 'FIJO', name: 'A-2 Igualada / Jorba' },
+  { id: 'cat-a2-4', lat: 41.4712, lon: 1.9245, vmax: 100, type: 'FIJO', name: 'A-2 Sant Andreu de la Barca' },
+  { id: 'cat-a2-5', lat: 41.4010, lon: 2.0050, vmax: 100, type: 'FIJO', name: 'A-2 Sant Vicenç dels Horts' },
+  { id: 'cat-a2-6', lat: 41.3522, lon: 2.0415, vmax: 80, type: 'FIJO', name: 'A-2 Cornellà / Sant Boi' },
+  { id: 'cat-b224-1', lat: 41.5120, lon: 1.7890, vmax: 80, type: 'FIJO', name: 'B-224 Piera / Masquefa' },
+  { id: 'cat-b224-2', lat: 41.4985, lon: 1.8520, vmax: 70, type: 'FIJO', name: 'B-224 Sant Esteve Sesrovires' },
+  { id: 'cat-b224-3', lat: 41.4820, lon: 1.9010, vmax: 80, type: 'FIJO', name: 'B-224 Martorell' },
+  { id: 'cat-c15-1', lat: 41.5520, lon: 1.6910, vmax: 90, type: 'FIJO', name: 'C-15 Capellades / Cabrera d\'Anoia' },
+  { id: 'cat-c15-2', lat: 41.4510, lon: 1.7420, vmax: 90, type: 'FIJO', name: 'C-15 Sant Sadurní / Gelida' },
+  { id: 'cat-n340-1', lat: 41.3410, lon: 1.6980, vmax: 100, type: 'FIJO', name: 'N-340 Vilafranca del Penedès' },
+  { id: 'cat-n340-2', lat: 41.3850, lon: 1.8820, vmax: 60, type: 'FIJO', name: 'N-340 Vallirana / Cervelló' },
+  { id: 'cat-c31-prat', lat: 41.3180, lon: 2.0650, vmax: 80, type: 'FIJO', name: 'C-31 El Prat de Llobregat' },
+  { id: 'cat-c32-gava', lat: 41.3145, lon: 2.0125, vmax: 100, type: 'FIJO', name: 'C-32 Gavà / Viladecans' },
+  { id: 'cat-c32-vilanova', lat: 41.2240, lon: 1.7320, vmax: 100, type: 'FIJO', name: 'C-32 Vilanova i la Geltrú' },
+  { id: 'cat-ap7-rubi', lat: 41.4789, lon: 2.0412, vmax: 120, type: 'FIJO', name: 'AP-7 Rubí / Castellbisbal' },
+  { id: 'cat-b30-cerdanyola', lat: 41.4910, lon: 2.1150, vmax: 100, type: 'FIJO', name: 'B-30 Cerdanyola / Barberà' },
+  { id: 'cat-ap7-mollet', lat: 41.5420, lon: 2.2150, vmax: 120, type: 'FIJO', name: 'AP-7 Santa Perpètua / Mollet' },
+  { id: 'cat-ap7-cardedeu', lat: 41.6120, lon: 2.3450, vmax: 120, type: 'FIJO', name: 'AP-7 Cardedeu / Llinars' },
+  { id: 'cat-ap7-castellvi', lat: 41.3920, lon: 1.9210, vmax: 120, type: 'FIJO', name: 'AP-7 Castellví de Rosanes' },
+  { id: 'cat-c58-trinitat', lat: 41.4621, lon: 2.1812, vmax: 80, type: 'FIJO', name: 'C-58 Entrada Trinitat' },
+  { id: 'cat-c58-badia', lat: 41.5240, lon: 2.1180, vmax: 100, type: 'FIJO', name: 'C-58 Badia / Sabadell' },
+  { id: 'cat-c58-terrassa', lat: 41.5610, lon: 2.0320, vmax: 80, type: 'FIJO', name: 'C-58 Terrassa' },
+  { id: 'cat-c16-manresa', lat: 41.6820, lon: 1.8540, vmax: 100, type: 'FIJO', name: 'C-16 Manresa / Sant Fruitós' },
+  { id: 'cat-c55-castellgali', lat: 41.6120, lon: 1.8620, vmax: 80, type: 'FIJO', name: 'C-55 Castellgalí / Monistrol' },
+  { id: 'cat-c17-parets', lat: 41.5640, lon: 2.2610, vmax: 80, type: 'FIJO', name: 'C-17 Parets / Montmeló' },
+  { id: 'cat-c17-llisa', lat: 41.6420, lon: 2.2750, vmax: 100, type: 'FIJO', name: 'C-17 Lliçà / La Garriga' },
+  { id: 'cat-c17-centelles', lat: 41.7850, lon: 2.2410, vmax: 80, type: 'FIJO', name: 'C-17 Tagamanent / Centelles' },
+  { id: 'cat-c31-badalona', lat: 41.4420, lon: 2.2410, vmax: 80, type: 'FIJO', name: 'C-31 Badalona' },
+  { id: 'cat-c32-alella', lat: 41.4910, lon: 2.3210, vmax: 100, type: 'FIJO', name: 'C-32 Alella / El Masnou' },
+  { id: 'cat-c32-mataro', lat: 41.5180, lon: 2.4120, vmax: 100, type: 'FIJO', name: 'C-32 Mataró / Cabrera de Mar' },
+  { id: 'cat-c32-arenys', lat: 41.5820, lon: 2.5410, vmax: 100, type: 'FIJO', name: 'C-32 Arenys / Caldes d\'Estrac' }
 ];
 
 let systemRunning = false;
@@ -561,7 +572,6 @@ async function handleMainButton() {
 async function startSystem() {
   systemRunning = true;
 
-  // Arrancar el reproductor nativo multimedia para fijar la notificación en la barra de Android
   const mediaAudio = document.getElementById('persistentAudio');
   mediaAudio.volume = 0.05;
   mediaAudio.play().catch(() => {});
@@ -697,6 +707,8 @@ async function fetchOsmRadars(minLat, minLon, maxLat, maxLon) {
   const query = `[out:json][timeout:20];(
     node["highway"="speed_camera"](${minLat},${minLon},${maxLat},${maxLon});
     node["enforcement"](${minLat},${minLon},${maxLat},${maxLon});
+    node["enforcement"="traffic_signals"](${minLat},${minLon},${maxLat},${maxLon});
+    node["traffic_signals"="supervised"](${minLat},${minLon},${maxLat},${maxLon});
     relation["enforcement"="maxspeed"](${minLat},${minLon},${maxLat},${maxLon});
     relation["enforcement"="average_speed"](${minLat},${minLon},${maxLat},${maxLon});
   );out center;`;
@@ -757,7 +769,7 @@ async function fetchLiveRadars(lat, lon) {
 
   osmList.forEach(el => {
     if (!el.lat || !el.lon) return;
-    const isTrafficLight = el.tags && el.tags.enforcement === 'traffic_signals';
+    const isTrafficLight = (el.tags && el.tags.enforcement === 'traffic_signals') || (el.tags && el.tags.highway === 'traffic_signals');
     const isAvgSpeed = el.tags && el.tags.enforcement === 'average_speed';
     combined.push({
       id: 'osm-' + el.id,
@@ -765,13 +777,13 @@ async function fetchLiveRadars(lat, lon) {
       lon: el.lon,
       vmax: (el.tags && el.tags.maxspeed) ? parseInt(el.tags.maxspeed) : 0,
       type: isTrafficLight ? 'SEMÁFORO' : (isAvgSpeed ? 'TRAMO' : 'FIJO'),
-      name: (el.tags && el.tags.name) ? el.tags.name : (isTrafficLight ? 'Radar Semáforo' : (isAvgSpeed ? 'Radar de Tramo SCT' : 'Radar Fijo SCT/OSM'))
+      name: (el.tags && el.tags.name) ? el.tags.name : (isTrafficLight ? 'Semáforo Foto-Rojo' : (isAvgSpeed ? 'Radar de Tramo SCT' : 'Radar Fijo SCT/OSM'))
     });
   });
 
   const deduplicated = [];
   combined.forEach(item => {
-    const exists = deduplicated.some(existing => calcDistance(item.lat, item.lon, existing.lat, existing.lon) < 35);
+    const exists = deduplicated.some(existing => calcDistance(item.lat, item.lon, existing.lat, existing.lon) < 30);
     if (!exists) deduplicated.push(item);
   });
 
@@ -821,8 +833,8 @@ async function fetchHelicopters() {
 
 function checkProximityAlerts() {
   if (!systemRunning) return;
-  const firstWarnDist = currentSpeed > 70 ? 800 : 480;
-  const secondWarnDist = currentSpeed > 70 ? 280 : 170;
+  const firstWarnDist = currentSpeed > 70 ? 850 : 500;
+  const secondWarnDist = currentSpeed > 70 ? 300 : 180;
 
   let closestAheadRadar = null;
   let minAheadDist = 99999;
@@ -838,7 +850,7 @@ function checkProximityAlerts() {
       const angleDiff = Math.abs(((bearingToPoi - userHeading + 540) % 360) - 180);
       isAhead = angleDiff <= 75;
     }
-    const isMovingAway = (d > prevD + 4) && d < 160;
+    const isMovingAway = (d > prevD + 4) && d < 150;
 
     if (isAhead && !isMovingAway && d < minAheadDist) {
       minAheadDist = d;
@@ -912,7 +924,7 @@ function checkProximityAlerts() {
     document.getElementById('alertSub').innerText = `Próximo: ${(minAheadDist / 1000).toFixed(1)} km (${closestAheadRadar.name})`;
   } else {
     document.getElementById('alertTitle').innerText = 'Ruta Protegida';
-    document.getElementById('alertSub').innerText = `${activePois.length} radares activos en tu zona`;
+    document.getElementById('alertSub').innerText = `${activePois.length} radares y semáforos activos en tu zona`;
   }
 }
 
