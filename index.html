@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>OOONO Moto CAT Pro</title>
+<title>OOONO Moto CAT Pro v16</title>
 
 <link rel="manifest" href="./manifest.json">
 
@@ -314,7 +314,7 @@
   </div>
 
   <div class="alert-box">
-    <div id="alertTitle" class="alert-title">OOONO Moto CAT Pro</div>
+    <div id="alertTitle" class="alert-title">OOONO Moto CAT Pro v16</div>
     <div id="alertSub" class="alert-sub">Toca el círculo central para encender</div>
   </div>
 
@@ -342,7 +342,7 @@ let swRegistration = null;
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      swRegistration = await navigator.serviceWorker.register('./sw.js');
+      swRegistration = await navigator.serviceWorker.register('./sw-v16.js');
       swRegistration.update();
     } catch (e) {}
   });
