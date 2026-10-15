@@ -10,6 +10,8 @@
 <title>OOONO Moto CAT Pro</title>
 
 <link rel="manifest" href="./manifest.json">
+<link id="dynamicFavicon" rel="icon" type="image/png" href="">
+<link id="dynamicTouchIcon" rel="apple-touch-icon" href="">
 
 <style>
   :root {
@@ -81,6 +83,7 @@
     display: none;
     align-items: center;
     gap: 4px;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
   }
 
   #dbCounter {
@@ -100,7 +103,7 @@
     background: #0d1117;
     border: 1px solid #1f2937;
     border-radius: 12px;
-    padding: 5px 12px;
+    padding: 6px 12px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -111,12 +114,19 @@
     font-weight: 700;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
   }
-  #persistentAudio {
-    height: 26px;
-    width: 160px;
-    filter: invert(1) hue-rotate(180deg);
+  .media-badge {
+    font-size: 10px;
+    background: #1f2937;
+    color: #9ca3af;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+  .media-badge.on {
+    background: #064e3b;
+    color: #34d399;
+    border: 1px solid #10b981;
   }
 
   .ooono-wrapper {
@@ -280,15 +290,16 @@
       <div id="statusDot" class="dot"></div>
       <span id="statusText">Toca el centro para iniciar</span>
     </div>
-    <button id="installBtn" onclick="triggerInstall()">📲 INSTALAR</button>
-    <div id="dbCounter" onclick="forceReloadRadars()" title="Toca para recargar">📍 120 | 🚁 0</div>
+    <button id="installBtn" onclick="triggerInstall()">📲 INSTALAR APP</button>
+    <div id="dbCounter" onclick="forceReloadRadars()" title="Toca para recargar">📍 74 | 🚁 0</div>
   </div>
 
+  <!-- BARRA DE ESTADO DEL SERVICIO EN SEGUNDO PLANO -->
   <div class="media-service-bar">
-    <span class="media-label">🛡️ OOONO Servicio 2º Plano</span>
-    <audio id="persistentAudio" controls loop preload="auto">
-      <source src="https://actions.google.com/sounds/v1/ambiences/rain_heavy.ogg" type="audio/ogg">
-    </audio>
+    <span class="media-label">🏍️🚗📡 Motor Segundo Plano</span>
+    <span id="bgBadge" class="media-badge">En espera</span>
+    <!-- Reproductor HTML5 oculto con pista silenciosa generada al vuelo para activar la barra de Android -->
+    <audio id="persistentAudio" loop style="display:none;"></audio>
   </div>
 
   <div class="ooono-wrapper">
@@ -305,8 +316,8 @@
   </div>
 
   <div class="alert-box">
-    <div id="alertTitle" class="alert-title">OOONO Moto CAT Pro v10</div>
-    <div id="alertSub" class="alert-sub">Dale al Play o al centro (Mantén 1.5s para apagar)</div>
+    <div id="alertTitle" class="alert-title">OOONO Moto CAT Pro v11</div>
+    <div id="alertSub" class="alert-sub">Toca el centro para activar (Mantén 1.5s para apagar)</div>
   </div>
 
   <div class="actions-grid">
@@ -329,6 +340,105 @@
 
 <script>
 let swRegistration = null;
+let customFusedIconPng = '';
+
+/**
+ * 1. GENERADOR DE ICONO PNG EN VIVO (MOTO + COCHE + ONDAS DE RADAR)
+ * Crea un archivo PNG real en memoria para las notificaciones de Android y la pantalla de bloqueo.
+ */
+function generateFusedIconPNG() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+
+  // Fondo negro redondeado
+  ctx.fillStyle = '#05070a';
+  ctx.beginPath();
+  ctx.roundRect(0, 0, 512, 512, 110);
+  ctx.fill();
+
+  // Anillo exterior LED rojo OOONO
+  ctx.strokeStyle = '#ff0033';
+  ctx.lineWidth = 28;
+  ctx.beginPath();
+  ctx.arc(256, 256, 210, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Ondas de Radar superiores
+  ctx.strokeStyle = '#ff8800';
+  ctx.lineWidth = 14;
+  ctx.lineCap = 'round';
+  [70, 115, 160].forEach(r => {
+    ctx.beginPath();
+    ctx.arc(256, 220, r, Math.PI * 1.2, Math.PI * 1.8);
+    ctx.stroke();
+  });
+
+  // Punto central del radar
+  ctx.fillStyle = '#ff0033';
+  ctx.beginPath();
+  ctx.arc(256, 220, 18, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Textos e iconos fusionados (Moto + Coche + Límite)
+  ctx.font = 'bold 95px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('🏍️🚗', 256, 340);
+
+  ctx.fillStyle = '#10b981';
+  ctx.font = '900 52px sans-serif';
+  ctx.fillText('RADAR CAT', 256, 415);
+
+  customFusedIconPng = canvas.toDataURL('image/png');
+  document.getElementById('dynamicFavicon').href = customFusedIconPng;
+  document.getElementById('dynamicTouchIcon').href = customFusedIconPng;
+}
+
+/**
+ * 2. GENERADOR DE PISTA WAV SILENCIOSA PARA ACTIVAR NOTIFICACIÓN FIJA EN ANDROID
+ * Sin lluvia molesta: genera 2 segundos de silencio digital que mantienen vivo el segundo plano
+ */
+function createSilentWavUrl() {
+  const sampleRate = 8000;
+  const numSamples = sampleRate * 2;
+  const buffer = new ArrayBuffer(44 + numSamples * 2);
+  const view = new DataView(buffer);
+  const writeString = (offset, str) => {
+    for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+  };
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + numSamples * 2, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeString(36, 'data');
+  view.setUint32(40, numSamples * 2, true);
+  const blob = new Blob([buffer], { type: 'audio/wav' });
+  return URL.createObjectURL(blob);
+}
+
+// Actualizar la tarjeta permanente de la barra de notificaciones de Android (MediaSession API)
+function updateAndroidStatusBar(title, subtitle) {
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: title,
+      artist: subtitle,
+      album: 'OOONO Moto CAT Pro',
+      artwork: [
+        { src: customFusedIconPng, sizes: '512x512', type: 'image/png' }
+      ]
+    });
+    navigator.mediaSession.setActionHandler('pause', () => stopSystem());
+    navigator.mediaSession.setActionHandler('stop', () => stopSystem());
+  }
+}
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
@@ -338,12 +448,6 @@ if ('serviceWorker' in navigator) {
     } catch (e) {}
   });
 }
-
-window.addEventListener('load', () => {
-  if ('Notification' in window && Notification.permission !== 'granted') {
-    Notification.requestPermission();
-  }
-});
 
 let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -363,7 +467,7 @@ async function triggerInstall() {
   }
 }
 
-// MEGA BASE DE DATOS CATALUNYA V10 (Tramos con inicio/fin exactos, semáforos foto-rojo y fijos)
+// 3. MEGA BASE DE DATOS CATALUNYA (Tramos Inicio/Fin, Semáforos Foto-Rojo y Fijos)
 const CATALUNYA_STATIC_RADARS = [
   { id: 't-rovira-ini', lat: 41.4215, lon: 2.1585, vmax: 60, type: 'TRAMO', name: 'Inicio Túnel de la Rovira' },
   { id: 't-rovira-fin', lat: 41.4110, lon: 2.1601, vmax: 60, type: 'TRAMO', name: 'Fin Túnel de la Rovira' },
@@ -497,9 +601,14 @@ function endPressTimer() {
 
 function showPushNotification(title, body) {
   if (swRegistration && swRegistration.active) {
-    swRegistration.active.postMessage({ type: 'SHOW_NOTIFICATION', title, body });
+    swRegistration.active.postMessage({
+      type: 'SHOW_NOTIFICATION',
+      title,
+      body,
+      icon: customFusedIconPng
+    });
   } else if ('Notification' in window && Notification.permission === 'granted') {
-    new Notification(title, { body: body, icon: 'https://cdn-icons-png.flaticon.com/192/2555/2555013.png' });
+    new Notification(title, { body: body, icon: customFusedIconPng });
   }
 }
 
@@ -539,6 +648,7 @@ function playOoonoBeep(pattern = 'RADAR') {
 function speakAlert(text, beepPattern = 'RADAR', pushTitle = '⚠️ Alerta de Radar') {
   playOoonoBeep(beepPattern);
   showPushNotification(pushTitle, text);
+  updateAndroidStatusBar(pushTitle, text);
   setTimeout(() => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
@@ -563,9 +673,21 @@ async function handleMainButton() {
 async function startSystem() {
   systemRunning = true;
 
+  if ('Notification' in window && Notification.permission !== 'granted') {
+    try { await Notification.requestPermission(); } catch (e) {}
+  }
+
   const mediaAudio = document.getElementById('persistentAudio');
-  mediaAudio.volume = 0.05;
-  mediaAudio.play().catch(() => {});
+  if (!mediaAudio.src) {
+    mediaAudio.src = createSilentWavUrl();
+  }
+  mediaAudio.volume = 0.02;
+  mediaAudio.play().then(() => {
+    const bgBadge = document.getElementById('bgBadge');
+    bgBadge.innerText = 'ACTIVO EN BARRA';
+    bgBadge.className = 'media-badge on';
+    updateAndroidStatusBar('🛡️ OOONO Moto Activo', `Vigilando ${activePois.length} radares en ruta`);
+  }).catch(() => {});
 
   document.getElementById('statusDot').className = 'dot active';
   document.getElementById('statusText').innerText = 'Protección Activa (2º Plano)';
@@ -573,13 +695,11 @@ async function startSystem() {
   document.getElementById('speedUnit').innerText = 'KM/H';
   document.getElementById('stopBtn').style.display = 'flex';
 
-  showPushNotification('🛡️ OOONO Moto Protegido', 'Servicio multimedia activo en la barra de estado.');
-
   if ('wakeLock' in navigator) {
     try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
   }
 
-  speakAlert('OOONO Moto activado.', 'RADAR', '🛡️ OOONO Activo');
+  speakAlert('OOONO Moto activado.', 'RADAR', '🛡️ OOONO Moto Activo');
 
   fetchLiveRadars(userLat, userLon);
   fetchHelicopters();
@@ -612,6 +732,10 @@ async function stopSystem() {
   const mediaAudio = document.getElementById('persistentAudio');
   mediaAudio.pause();
 
+  const bgBadge = document.getElementById('bgBadge');
+  bgBadge.innerText = 'Apagado';
+  bgBadge.className = 'media-badge';
+
   if (wakeLock !== null) {
     try { await wakeLock.release(); } catch (e) {}
     wakeLock = null;
@@ -634,7 +758,7 @@ async function stopSystem() {
   document.getElementById('limitBadge').style.display = 'none';
   document.getElementById('stopBtn').style.display = 'none';
   document.getElementById('alertTitle').innerText = 'Sistema Apagado';
-  document.getElementById('alertSub').innerText = 'GPS y Servicio Multimedia detenidos.';
+  document.getElementById('alertSub').innerText = 'GPS y Servicio 2º Plano detenidos.';
 }
 
 function forceReloadRadars() {
@@ -911,8 +1035,10 @@ function checkProximityAlerts() {
   ring.className = 'led-ring';
   badge.style.display = 'none';
   if (closestAheadRadar && minAheadDist < 15000) {
+    const nextTxt = `Próximo: ${(minAheadDist / 1000).toFixed(1)} km (${closestAheadRadar.name})`;
     document.getElementById('alertTitle').innerText = 'Ruta Vigilada';
-    document.getElementById('alertSub').innerText = `Próximo: ${(minAheadDist / 1000).toFixed(1)} km (${closestAheadRadar.name})`;
+    document.getElementById('alertSub').innerText = nextTxt;
+    updateAndroidStatusBar(`🛡️ Ruta Vigilada (${currentSpeed} km/h)`, nextTxt);
   } else {
     document.getElementById('alertTitle').innerText = 'Ruta Protegida';
     document.getElementById('alertSub').innerText = `${activePois.length} radares y semáforos activos en tu zona`;
@@ -971,6 +1097,7 @@ function calcBearing(lat1, lon1, lat2, lon2) {
 }
 
 window.addEventListener('load', () => {
+  generateFusedIconPNG();
   activePois = [...CATALUNYA_STATIC_RADARS];
   updateCounterUI();
   fetchLiveRadars(userLat, userLon);
