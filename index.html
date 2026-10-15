@@ -9,7 +9,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>OOONO Moto CAT Pro</title>
 
-<!-- ENLACE AL ARCHIVO MANIFEST.JSON REAL -->
 <link rel="manifest" href="./manifest.json">
 
 <style>
@@ -70,19 +69,14 @@
   .dot.active { background: #10b981; box-shadow: 0 0 8px #10b981; }
   .dot.warn { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
 
-  #installBtn {
-    background: linear-gradient(135deg, #059669, #10b981);
-    color: #ffffff;
-    border: none;
-    padding: 6px 12px;
+  #dbCounter {
+    color: #10b981;
+    font-weight: 700;
+    background: #161f2c;
+    padding: 4px 8px;
     border-radius: 8px;
-    font-weight: 800;
-    font-size: 11px;
+    border: 1px solid #2d3748;
     cursor: pointer;
-    display: none;
-    align-items: center;
-    gap: 4px;
-    box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
   }
 
   .ooono-wrapper {
@@ -237,8 +231,7 @@
       <div id="statusDot" class="dot"></div>
       <span id="statusText">Toca el centro para iniciar</span>
     </div>
-    <button id="installBtn" onclick="triggerInstall()">📲 INSTALAR APP</button>
-    <div id="dbCounter" style="color:#9ca3af; font-weight:600;">📍 0 | 🚁 0</div>
+    <div id="dbCounter" onclick="forceReloadRadars()">📍 75 | 🚁 0</div>
   </div>
 
   <div class="ooono-wrapper">
@@ -273,58 +266,98 @@
   </div>
 
 <script>
-// 1. REGISTRO DEL SERVICE WORKER (Obligatorio para instalar PWA real en Android)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   });
 }
 
-let deferredPrompt = null;
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  document.getElementById('installBtn').style.display = 'flex';
-});
-
-async function triggerInstall() {
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      document.getElementById('installBtn').style.display = 'none';
-    }
-    deferredPrompt = null;
-  }
-}
-
-// 2. BASE DE DATOS FIJA DE RESPALDO (BARCELONA Y CATALUNYA)
+// 1. BASE DE DATOS INTERNA AMPLIADA (75 RADARES CLAVE DE BARCELONA Y CATALUNYA)
 const CATALUNYA_STATIC_RADARS = [
+  // Túneles y Tramos Barcelona
   { id: 'bcn-1', lat: 41.4162, lon: 2.1592, vmax: 60, type: 'TRAMO', name: 'Túnel de la Rovira' },
   { id: 'bcn-2', lat: 41.3789, lon: 2.1281, vmax: 60, type: 'TRAMO', name: 'Túnel de Badal' },
   { id: 'bcn-3', lat: 41.4038, lon: 2.1872, vmax: 50, type: 'TRAMO', name: 'Túnel de les Glòries' },
   { id: 'bcn-4', lat: 41.4428, lon: 2.1725, vmax: 80, type: 'TRAMO', name: 'Ronda de Dalt (Karl Marx)' },
-  { id: 'bcn-5', lat: 41.4344, lon: 2.1520, vmax: 80, type: 'FIJO', name: 'Ronda de Dalt km 12' },
-  { id: 'bcn-6', lat: 41.4021, lon: 2.1042, vmax: 80, type: 'FIJO', name: 'Ronda de Dalt Esplugues' },
-  { id: 'bcn-7', lat: 41.3665, lon: 2.1770, vmax: 80, type: 'FIJO', name: 'Ronda Litoral Mirador' },
-  { id: 'bcn-8', lat: 41.3910, lon: 2.2035, vmax: 80, type: 'FIJO', name: 'Ronda Litoral Poblenou' },
-  { id: 'bcn-9', lat: 41.3842, lon: 2.1158, vmax: 50, type: 'FIJO', name: 'Av. Diagonal 671' },
-  { id: 'bcn-10', lat: 41.3914, lon: 2.1384, vmax: 50, type: 'FIJO', name: 'Av. Diagonal 563' },
-  { id: 'bcn-11', lat: 41.4045, lon: 2.1895, vmax: 50, type: 'FIJO', name: 'Gran Via / Glòries' },
-  { id: 'bcn-12', lat: 41.3752, lon: 2.1501, vmax: 50, type: 'FIJO', name: 'Gran Via / Espanya' },
-  { id: 'bcn-13', lat: 41.3853, lon: 2.1558, vmax: 50, type: 'FIJO', name: 'Carrer Aragó 174' },
-  { id: 'bcn-14', lat: 41.3976, lon: 2.1524, vmax: 50, type: 'FIJO', name: 'Carrer Balmes 201' },
-  { id: 'bcn-15', lat: 41.3821, lon: 2.1432, vmax: 30, type: 'FIJO', name: 'Carrer Entença' },
-  { id: 'bcn-16', lat: 41.3895, lon: 2.1481, vmax: 30, type: 'FIJO', name: 'Carrer Muntaner' },
-  { id: 'cat-1', lat: 41.5432, lon: 1.8721, vmax: 100, type: 'FIJO', name: 'A-2 Esparreguera' },
-  { id: 'cat-2', lat: 41.5680, lon: 1.7850, vmax: 100, type: 'FIJO', name: 'A-2 el Bruc' },
-  { id: 'cat-3', lat: 41.4712, lon: 1.9245, vmax: 100, type: 'FIJO', name: 'A-2 Sant Andreu' },
-  { id: 'cat-4', lat: 41.3522, lon: 2.0415, vmax: 80, type: 'FIJO', name: 'A-2 Cornellà' },
-  { id: 'cat-5', lat: 41.5120, lon: 1.7890, vmax: 80, type: 'FIJO', name: 'B-224 Piera / Masquefa' },
-  { id: 'cat-6', lat: 41.2825, lon: 1.9810, vmax: 80, type: 'TRAMO', name: 'C-31 Castelldefels' },
-  { id: 'cat-7', lat: 41.3145, lon: 2.0125, vmax: 100, type: 'FIJO', name: 'C-32 Gavà' },
-  { id: 'cat-8', lat: 41.4621, lon: 2.1812, vmax: 80, type: 'FIJO', name: 'C-58 Trinitat' },
-  { id: 'cat-9', lat: 41.4789, lon: 2.0412, vmax: 120, type: 'FIJO', name: 'AP-7 Rubí' }
+  // Ronda de Dalt (B-20)
+  { id: 'bcn-5', lat: 41.4344, lon: 2.1520, vmax: 80, type: 'FIJO', name: 'Ronda de Dalt km 12 (Horta)' },
+  { id: 'bcn-6', lat: 41.4021, lon: 2.1042, vmax: 80, type: 'FIJO', name: 'Ronda de Dalt km 4.8 (Esplugues)' },
+  { id: 'bcn-7', lat: 41.4465, lon: 2.1882, vmax: 80, type: 'FIJO', name: 'Ronda de Dalt km 14.3 (Trinitat)' },
+  { id: 'bcn-8', lat: 41.3892, lon: 2.0915, vmax: 80, type: 'FIJO', name: 'Ronda de Dalt Cornellà/Diagonal' },
+  // Ronda Litoral (B-10)
+  { id: 'bcn-9', lat: 41.3665, lon: 2.1770, vmax: 80, type: 'FIJO', name: 'Ronda Litoral km 10 (Mirador)' },
+  { id: 'bcn-10', lat: 41.3910, lon: 2.2035, vmax: 80, type: 'FIJO', name: 'Ronda Litoral km 13 (Poblenou)' },
+  { id: 'bcn-11', lat: 41.3485, lon: 2.1420, vmax: 80, type: 'FIJO', name: 'Ronda Litoral km 7 (Zona Franca)' },
+  { id: 'bcn-12', lat: 41.4215, lon: 2.2210, vmax: 80, type: 'FIJO', name: 'Ronda Litoral Potosí / Bon Pastor' },
+  // Interior Ciudad Barcelona (50 km/h, 30 km/h y Semáforos Foto-Rojo)
+  { id: 'bcn-13', lat: 41.3842, lon: 2.1158, vmax: 50, type: 'FIJO', name: 'Av. Diagonal 671 (Entrada BCN)' },
+  { id: 'bcn-14', lat: 41.3914, lon: 2.1384, vmax: 50, type: 'FIJO', name: 'Av. Diagonal 563 (L\'Illa)' },
+  { id: 'bcn-15', lat: 41.4062, lon: 2.1985, vmax: 50, type: 'FIJO', name: 'Av. Diagonal 110 (Sant Martí)' },
+  { id: 'bcn-16', lat: 41.3982, lon: 2.1645, vmax: 50, type: 'SEMÁFORO', name: 'Av. Diagonal / Roger de Llúria' },
+  { id: 'bcn-17', lat: 41.4045, lon: 2.1895, vmax: 50, type: 'FIJO', name: 'Gran Via 304 (Glòries)' },
+  { id: 'bcn-18', lat: 41.3752, lon: 2.1501, vmax: 50, type: 'FIJO', name: 'Gran Via 329 (Plaça Espanya)' },
+  { id: 'bcn-19', lat: 41.3853, lon: 2.1558, vmax: 50, type: 'FIJO', name: 'Carrer Aragó 174' },
+  { id: 'bcn-20', lat: 41.4052, lon: 2.1795, vmax: 50, type: 'FIJO', name: 'Carrer Aragó 499' },
+  { id: 'bcn-21', lat: 41.3921, lon: 2.1648, vmax: 50, type: 'SEMÁFORO', name: 'Carrer Aragó / Passeig de Gràcia' },
+  { id: 'bcn-22', lat: 41.3976, lon: 2.1524, vmax: 50, type: 'FIJO', name: 'Carrer Balmes 201' },
+  { id: 'bcn-23', lat: 41.4071, lon: 2.1422, vmax: 50, type: 'FIJO', name: 'Carrer Balmes 371 (Mitre)' },
+  { id: 'bcn-24', lat: 41.3821, lon: 2.1432, vmax: 30, type: 'FIJO', name: 'Carrer Entença 155 (Zona 30)' },
+  { id: 'bcn-25', lat: 41.3895, lon: 2.1481, vmax: 30, type: 'FIJO', name: 'Carrer Muntaner 158 (Zona 30)' },
+  { id: 'bcn-26', lat: 41.3855, lon: 2.1389, vmax: 30, type: 'FIJO', name: 'Carrer Numància 163' },
+  { id: 'bcn-27', lat: 41.4018, lon: 2.1678, vmax: 50, type: 'FIJO', name: 'Carrer Mallorca 351' },
+  { id: 'bcn-28', lat: 41.4285, lon: 2.1865, vmax: 50, type: 'FIJO', name: 'Av. Meridiana 408' },
+  { id: 'bcn-29', lat: 41.4450, lon: 2.1868, vmax: 50, type: 'FIJO', name: 'Av. Meridiana 564 (Salida BCN)' },
+  { id: 'bcn-30', lat: 41.3742, lon: 2.1685, vmax: 50, type: 'FIJO', name: 'Av. Paral·lel 112' },
+  { id: 'bcn-31', lat: 41.3935, lon: 2.1210, vmax: 30, type: 'FIJO', name: 'Carrer Iradier / Bonanova' },
+  { id: 'bcn-32', lat: 41.4112, lon: 2.1398, vmax: 50, type: 'FIJO', name: 'Ronda General Mitre 79' },
+  { id: 'bcn-33', lat: 41.3812, lon: 2.1825, vmax: 50, type: 'FIJO', name: 'Passeig Isabel II / Via Laietana' },
+  { id: 'bcn-34', lat: 41.4148, lon: 2.1745, vmax: 30, type: 'FIJO', name: 'Carrer Indústria 251' },
+  { id: 'bcn-35', lat: 41.3792, lon: 2.1380, vmax: 30, type: 'FIJO', name: 'Carrer Creu Coberta / Sants' },
+  { id: 'bcn-36', lat: 41.4090, lon: 2.1550, vmax: 30, type: 'FIJO', name: 'Travessera de Dalt / Gràcia' },
+  { id: 'bcn-37', lat: 41.3965, lon: 2.1815, vmax: 50, type: 'SEMÁFORO', name: 'Av. Meridiana / Marina' },
+  { id: 'bcn-38', lat: 41.3620, lon: 2.1355, vmax: 50, type: 'FIJO', name: 'Passeig Zona Franca' },
+  // Eje A-2, Baix Llobregat, Anoia y Piera
+  { id: 'cat-1', lat: 41.5432, lon: 1.8721, vmax: 100, type: 'FIJO', name: 'A-2 Esparreguera / Collbató' },
+  { id: 'cat-2', lat: 41.5680, lon: 1.7850, vmax: 100, type: 'FIJO', name: 'A-2 el Bruc (Montserrat)' },
+  { id: 'cat-3', lat: 41.5810, lon: 1.6320, vmax: 120, type: 'FIJO', name: 'A-2 Igualada / Jorba' },
+  { id: 'cat-4', lat: 41.4712, lon: 1.9245, vmax: 100, type: 'FIJO', name: 'A-2 Sant Andreu de la Barca' },
+  { id: 'cat-5', lat: 41.4010, lon: 2.0050, vmax: 100, type: 'FIJO', name: 'A-2 Sant Vicenç dels Horts' },
+  { id: 'cat-6', lat: 41.3522, lon: 2.0415, vmax: 80, type: 'FIJO', name: 'A-2 Cornellà / Sant Boi' },
+  { id: 'cat-7', lat: 41.5120, lon: 1.7890, vmax: 80, type: 'FIJO', name: 'B-224 Piera / Masquefa' },
+  { id: 'cat-8', lat: 41.4985, lon: 1.8520, vmax: 70, type: 'FIJO', name: 'B-224 Sant Esteve Sesrovires' },
+  { id: 'cat-9', lat: 41.4820, lon: 1.9010, vmax: 80, type: 'FIJO', name: 'B-224 Martorell' },
+  { id: 'cat-10', lat: 41.5520, lon: 1.6910, vmax: 90, type: 'FIJO', name: 'C-15 Capellades / Cabrera d\'Anoia' },
+  { id: 'cat-11', lat: 41.4510, lon: 1.7420, vmax: 90, type: 'FIJO', name: 'C-15 Sant Sadurní / Gelida' },
+  { id: 'cat-12', lat: 41.3410, lon: 1.6980, vmax: 100, type: 'FIJO', name: 'N-340 Vilafranca del Penedès' },
+  { id: 'cat-13', lat: 41.3850, lon: 1.8820, vmax: 60, type: 'FIJO', name: 'N-340 Vallirana / Cervelló' },
+  // Eje Costa Sur: C-31, C-32, Garraf
+  { id: 'cat-14', lat: 41.2825, lon: 1.9810, vmax: 80, type: 'TRAMO', name: 'C-31 Autovía Castelldefels' },
+  { id: 'cat-15', lat: 41.3180, lon: 2.0650, vmax: 80, type: 'FIJO', name: 'C-31 El Prat de Llobregat' },
+  { id: 'cat-16', lat: 41.3145, lon: 2.0125, vmax: 100, type: 'FIJO', name: 'C-32 Gavà / Viladecans' },
+  { id: 'cat-17', lat: 41.2510, lon: 1.8540, vmax: 80, type: 'FIJO', name: 'C-32 Túneles del Garraf / Sitges' },
+  { id: 'cat-18', lat: 41.2240, lon: 1.7320, vmax: 100, type: 'FIJO', name: 'C-32 Vilanova i la Geltrú' },
+  // Eje AP-7 y B-30 (Vallès)
+  { id: 'cat-19', lat: 41.4789, lon: 2.0412, vmax: 120, type: 'FIJO', name: 'AP-7 Rubí / Castellbisbal' },
+  { id: 'cat-20', lat: 41.4910, lon: 2.1150, vmax: 100, type: 'FIJO', name: 'B-30 Cerdanyola / Barberà' },
+  { id: 'cat-21', lat: 41.5420, lon: 2.2150, vmax: 120, type: 'FIJO', name: 'AP-7 Santa Perpètua / Mollet' },
+  { id: 'cat-22', lat: 41.6120, lon: 2.3450, vmax: 120, type: 'FIJO', name: 'AP-7 Cardedeu / Llinars' },
+  { id: 'cat-23', lat: 41.3920, lon: 1.9210, vmax: 120, type: 'FIJO', name: 'AP-7 Castellví de Rosanes' },
+  // Eje Norte: C-58, C-16, C-17, C-55
+  { id: 'cat-24', lat: 41.4621, lon: 2.1812, vmax: 80, type: 'FIJO', name: 'C-58 Entrada Trinitat' },
+  { id: 'cat-25', lat: 41.5240, lon: 2.1180, vmax: 100, type: 'FIJO', name: 'C-58 Badia / Sabadell' },
+  { id: 'cat-26', lat: 41.5610, lon: 2.0320, vmax: 80, type: 'FIJO', name: 'C-58 Terrassa' },
+  { id: 'cat-27', lat: 41.4710, lon: 2.0620, vmax: 90, type: 'TRAMO', name: 'C-16 Túneles de Vallvidrera' },
+  { id: 'cat-28', lat: 41.6820, lon: 1.8540, vmax: 100, type: 'FIJO', name: 'C-16 Manresa / Sant Fruitós' },
+  { id: 'cat-29', lat: 41.6120, lon: 1.8620, vmax: 80, type: 'FIJO', name: 'C-55 Castellgalí / Monistrol' },
+  { id: 'cat-30', lat: 41.5640, lon: 2.2610, vmax: 80, type: 'FIJO', name: 'C-17 Parets / Montmeló' },
+  { id: 'cat-31', lat: 41.6420, lon: 2.2750, vmax: 100, type: 'FIJO', name: 'C-17 Lliçà / La Garriga' },
+  { id: 'cat-32', lat: 41.7850, lon: 2.2410, vmax: 80, type: 'FIJO', name: 'C-17 Tagamanent / Centelles' },
+  // Eje Maresme: C-31 Norte y C-32 Norte
+  { id: 'cat-33', lat: 41.4420, lon: 2.2410, vmax: 80, type: 'FIJO', name: 'C-31 Badalona' },
+  { id: 'cat-34', lat: 41.4910, lon: 2.3210, vmax: 100, type: 'FIJO', name: 'C-32 Alella / El Masnou' },
+  { id: 'cat-35', lat: 41.5180, lon: 2.4120, vmax: 100, type: 'FIJO', name: 'C-32 Mataró / Cabrera de Mar' },
+  { id: 'cat-36', lat: 41.5820, lon: 2.5410, vmax: 100, type: 'FIJO', name: 'C-32 Arenys / Caldes d\'Estrac' },
+  { id: 'cat-37', lat: 41.6350, lon: 2.6810, vmax: 100, type: 'TRAMO', name: 'C-32 Túnel Calella / Pineda' }
 ];
 
 let systemRunning = false;
@@ -338,18 +371,13 @@ let prevLon = null;
 let activePois = [...CATALUNYA_STATIC_RADARS];
 let customReports = JSON.parse(localStorage.getItem('ooono_custom_reports') || '[]');
 let activeHelis = [];
-let alertedStage = new Map(); // Guarda fase de aviso: 1 (lejos ~700m) y 2 (cerca ~250m)
+let alertedStage = new Map();
 let prevDistanceMap = new Map();
 let audioCtx = null;
 let keepAliveAudio = null;
 let wakeLock = null;
 let lastFetchCoords = { lat: 0, lon: 0 };
 
-/**
- * 3. MOTOR DE AUDIO ANTI-SUEÑO PARA ANDROID Y BLUETOOTH
- * Crea un bucle de audio WAV silencioso que impide que Android suspenda el GPS y la voz
- * cuando bloqueas el móvil o llevas Spotify/RoadSync abierto.
- */
 function startBackgroundAudioLock() {
   if (!audioCtx) {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -359,7 +387,6 @@ function startBackgroundAudioLock() {
     audioCtx.resume();
   }
   if (!keepAliveAudio) {
-    // Archivo WAV de 1 segundo de silencio puro en base64
     keepAliveAudio = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
     keepAliveAudio.loop = true;
     keepAliveAudio.volume = 0.01;
@@ -423,26 +450,21 @@ async function startSystem() {
   systemRunning = true;
 
   document.getElementById('statusDot').className = 'dot active';
-  document.getElementById('statusText').innerText = 'Protección Activa (2º Plano)';
+  document.getElementById('statusText').innerText = 'Descargando Red Catalana...';
   document.getElementById('speedDisplay').innerText = '0';
   document.getElementById('speedUnit').innerText = 'KM/H';
-  document.getElementById('alertTitle').innerText = 'Escaneando Ruta';
-  document.getElementById('alertSub').innerText = 'Conectado a Blitzer.de + OSM + Pegasus';
 
   if ('wakeLock' in navigator) {
     try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
   }
 
-  speakAlert('OOONO Moto activado. Radar y audio listos.', 'RADAR');
+  speakAlert('OOONO Moto activado. Descargando radares.', 'RADAR');
+
+  // Lanzar descarga inmediata con coordenadas de Barcelona mientras el GPS afina
+  fetchLiveRadars(userLat, userLon);
+  fetchHelicopters();
 
   if ('geolocation' in navigator) {
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-      userLat = pos.coords.latitude;
-      userLon = pos.coords.longitude;
-      await fetchLiveRadars(userLat, userLon);
-      fetchHelicopters();
-    }, () => {}, { enableHighAccuracy: true });
-
     navigator.geolocation.watchPosition(onGpsUpdate, onGpsError, {
       enableHighAccuracy: true,
       maximumAge: 1000,
@@ -451,6 +473,12 @@ async function startSystem() {
   }
 
   setInterval(fetchHelicopters, 15000);
+}
+
+function forceReloadRadars() {
+  document.getElementById('statusText').innerText = 'Actualizando bases...';
+  fetchLiveRadars(userLat, userLon);
+  fetchHelicopters();
 }
 
 function onGpsUpdate(pos) {
@@ -469,7 +497,7 @@ function onGpsUpdate(pos) {
   userLat = newLat; userLon = newLon;
 
   const distFromLastFetch = calcDistance(userLat, userLon, lastFetchCoords.lat, lastFetchCoords.lon);
-  if (distFromLastFetch > 2500 || lastFetchCoords.lat === 0) {
+  if (distFromLastFetch > 3500 || lastFetchCoords.lat === 0) {
     lastFetchCoords = { lat: userLat, lon: userLon };
     fetchLiveRadars(userLat, userLon);
     fetchHelicopters();
@@ -483,66 +511,94 @@ function onGpsError(err) {
   document.getElementById('alertSub').innerText = 'Buscando señal GPS exterior...';
 }
 
-async function fetchWithFallbackProxy(targetUrl) {
+// 2. DESCARGA MULTI-SERVIDOR (3 Espejos OSM + 4 Proxies Blitzer.de)
+async function fetchBlitzerPois(minLat, minLon, maxLat, maxLon) {
+  const target = `https://cdn2.atudo.net/api/4.0/pois.php?type=0,1,2,3,4,5,6,101,102,103,104,105,106,107&box=${minLat},${minLon},${maxLat},${maxLon}`;
   const proxies = [
-    `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
-    `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(target)}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`,
+    `https://corsproxy.io/?url=${encodeURIComponent(target)}`
   ];
   for (const p of proxies) {
     try {
-      const r = await fetch(p, { signal: AbortSignal.timeout(6000) });
-      if (r.ok) return await r.json();
+      const res = await fetch(p);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.pois) return data.pois;
+      }
     } catch (e) {}
   }
-  return null;
+  return [];
+}
+
+async function fetchOsmRadars(minLat, minLon, maxLat, maxLon) {
+  // Descarga radares de velocidad + cámaras de semáforo en rojo
+  const query = `[out:json][timeout:18];(node["highway"="speed_camera"](${minLat},${minLon},${maxLat},${maxLon});node["enforcement"="maxspeed"](${minLat},${minLon},${maxLat},${maxLon});node["enforcement"="traffic_signals"](${minLat},${minLon},${maxLat},${maxLon}););out body;`;
+  const mirrors = [
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter',
+    'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
+  ];
+  for (const url of mirrors) {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        body: 'data=' + encodeURIComponent(query),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.elements && data.elements.length > 0) {
+          return data.elements;
+        }
+      }
+    } catch (e) {}
+  }
+  return [];
 }
 
 async function fetchLiveRadars(lat, lon) {
-  const delta = 0.25;
-  const minLat = (lat - delta).toFixed(5);
-  const maxLat = (lat + delta).toFixed(5);
-  const minLon = (lon - delta).toFixed(5);
-  const maxLon = (lon + delta).toFixed(5);
-
-  const fourHoursAgo = Date.now() - (4 * 3600 * 1000);
-  customReports = customReports.filter(r => !r.ts || r.ts > fourHoursAgo);
+  // Caja de 0.45 grados (~50 km alrededor: cubre toda el Área Metropolitana, Vallès, Maresme, Piera y Garraf de golpe)
+  const delta = 0.45;
+  const minLat = (lat - delta).toFixed(4);
+  const maxLat = (lat + delta).toFixed(4);
+  const minLon = (lon - delta).toFixed(4);
+  const maxLon = (lon + delta).toFixed(4);
 
   let combined = [...CATALUNYA_STATIC_RADARS, ...customReports];
 
-  const blitzerUrl = `https://cdn2.atudo.net/api/4.0/pois.php?type=0,1,2,3,4,5,6,101,102,103,104,105,106,107&box=${minLat},${minLon},${maxLat},${maxLon}`;
-  const blitzerData = await fetchWithFallbackProxy(blitzerUrl);
-  if (blitzerData && blitzerData.pois) {
-    blitzerData.pois.forEach(p => {
-      const isMobile = parseInt(p.type) < 50;
-      combined.push({
-        id: 'blz-' + p.id,
-        lat: parseFloat(p.lat),
-        lon: parseFloat(p.lng),
-        vmax: parseInt(p.vmax) || 0,
-        type: isMobile ? 'MÓVIL' : 'FIJO',
-        name: isMobile ? 'Radar Móvil (Blitzer.de)' : 'Radar Fijo'
-      });
+  // Ejecutamos Blitzer y OpenStreetMap en paralelo
+  const [blitzerList, osmList] = await Promise.all([
+    fetchBlitzerPois(minLat, minLon, maxLat, maxLon),
+    fetchOsmRadars(minLat, minLon, maxLat, maxLon)
+  ]);
+
+  blitzerList.forEach(p => {
+    const isMobile = parseInt(p.type) < 50;
+    combined.push({
+      id: 'blz-' + p.id,
+      lat: parseFloat(p.lat),
+      lon: parseFloat(p.lng),
+      vmax: parseInt(p.vmax) || 0,
+      type: isMobile ? 'MÓVIL' : 'FIJO',
+      name: isMobile ? 'Radar Móvil (Blitzer.de)' : 'Radar Fijo Blitzer'
     });
-  }
+  });
 
-  try {
-    const overpassQuery = `[out:json][timeout:10];node["highway"="speed_camera"](${minLat},${minLon},${maxLat},${maxLon});out body;`;
-    const osmRes = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`);
-    if (osmRes.ok) {
-      const osmData = await osmRes.json();
-      osmData.elements.forEach(el => {
-        combined.push({
-          id: 'osm-' + el.id,
-          lat: el.lat,
-          lon: el.lon,
-          vmax: el.tags && el.tags.maxspeed ? parseInt(el.tags.maxspeed) : 0,
-          type: 'FIJO',
-          name: (el.tags && el.tags.name) ? el.tags.name : 'Radar Fijo OSM'
-        });
-      });
-    }
-  } catch (e) {}
+  osmList.forEach(el => {
+    if (!el.lat || !el.lon) return;
+    const isTrafficLight = el.tags && el.tags.enforcement === 'traffic_signals';
+    combined.push({
+      id: 'osm-' + el.id,
+      lat: el.lat,
+      lon: el.lon,
+      vmax: (el.tags && el.tags.maxspeed) ? parseInt(el.tags.maxspeed) : 0,
+      type: isTrafficLight ? 'SEMÁFORO' : 'FIJO',
+      name: (el.tags && el.tags.name) ? el.tags.name : (isTrafficLight ? 'Radar Semáforo' : 'Radar Fijo SCT/OSM')
+    });
+  });
 
+  // Limpiar duplicados a menos de 35 metros
   const deduplicated = [];
   combined.forEach(item => {
     const exists = deduplicated.some(existing => calcDistance(item.lat, item.lon, existing.lat, existing.lon) < 35);
@@ -550,7 +606,9 @@ async function fetchLiveRadars(lat, lon) {
   });
 
   activePois = deduplicated;
+  document.getElementById('statusText').innerText = 'Protección Activa (2º Plano)';
   updateCounterUI();
+  checkProximityAlerts();
 }
 
 async function fetchHelicopters() {
@@ -589,9 +647,6 @@ async function fetchHelicopters() {
   } catch (e) {}
 }
 
-/**
- * 4. DETECCIÓN DE RADARES CON DOBLE AVISO (800m y 250m)
- */
 function checkProximityAlerts() {
   const firstWarnDist = currentSpeed > 70 ? 800 : 480;
   const secondWarnDist = currentSpeed > 70 ? 280 : 170;
@@ -604,7 +659,6 @@ function checkProximityAlerts() {
     const prevD = prevDistanceMap.get(poi.id) || d;
     prevDistanceMap.set(poi.id, d);
 
-    // Ampliado a 75 grados para que también avise en curvas de carretera
     let isAhead = true;
     if (userHeading !== null && currentSpeed > 15 && d > 70) {
       const bearingToPoi = calcBearing(userLat, userLon, poi.lat, poi.lon);
@@ -650,13 +704,10 @@ function checkProximityAlerts() {
     const currentStage = alertedStage.get(closestAheadRadar.id) || 0;
     const limitText = closestAheadRadar.vmax > 0 ? `, límite ${closestAheadRadar.vmax}` : '';
 
-    // Primer aviso al entrar en zona (800m / 480m)
     if (currentStage === 0) {
       alertedStage.set(closestAheadRadar.id, 1);
       speakAlert(`Atención, radar ${closestAheadRadar.type.toLowerCase()} a ${distRounded} metros${limitText}`, isOverspeed ? 'OVERSPEED' : 'RADAR');
-    } 
-    // Segundo aviso de confirmación cuando estás encima (280m / 170m)
-    else if (currentStage === 1 && minAheadDist <= secondWarnDist) {
+    } else if (currentStage === 1 && minAheadDist <= secondWarnDist) {
       alertedStage.set(closestAheadRadar.id, 2);
       if (isOverspeed) {
         speakAlert(`Frena, límite ${closestAheadRadar.vmax}`, 'OVERSPEED');
@@ -688,7 +739,7 @@ function checkProximityAlerts() {
     document.getElementById('alertSub').innerText = `Próximo: ${(minAheadDist / 1000).toFixed(1)} km (${closestAheadRadar.name})`;
   } else {
     document.getElementById('alertTitle').innerText = 'Ruta Protegida';
-    document.getElementById('alertSub').innerText = `${activePois.length} radares cargados en tu zona`;
+    document.getElementById('alertSub').innerText = `${activePois.length} radares activos en tu zona`;
   }
 }
 
@@ -744,10 +795,10 @@ function calcBearing(lat1, lon1, lat2, lon2) {
 }
 
 window.addEventListener('load', () => {
-  customReports = [];
-  localStorage.removeItem('ooono_custom_reports');
   activePois = [...CATALUNYA_STATIC_RADARS];
   updateCounterUI();
+  // Descarga automática de los servidores externos nada más abrir la app
+  fetchLiveRadars(userLat, userLon);
   if (window.location.search.includes('auto=1')) {
     setTimeout(() => startSystem(), 700);
   }
