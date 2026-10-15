@@ -9,7 +9,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>OOONO Moto CAT Pro</title>
 
-<!-- Enlace al archivo manifest.json de tu repositorio -->
 <link rel="manifest" href="./manifest.json">
 
 <style>
@@ -108,8 +107,8 @@
   }
   .ooono-container {
     position: relative;
-    width: min(60vw, 35dvh, 245px);
-    height: min(60vw, 35dvh, 245px);
+    width: min(58vw, 33dvh, 235px);
+    height: min(58vw, 33dvh, 235px);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -162,7 +161,7 @@
   }
   .center-button:active { transform: scale(0.95); }
   .speed-value {
-    font-size: clamp(42px, 7.5dvh, 58px);
+    font-size: clamp(40px, 7dvh, 56px);
     font-weight: 900;
     line-height: 1;
     letter-spacing: -2px;
@@ -175,9 +174,9 @@
     letter-spacing: 1px;
   }
   .limit-badge {
-    margin-top: 6px;
-    width: 44px;
-    height: 44px;
+    margin-top: 5px;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
     background: #ffffff;
     color: #000000;
@@ -185,7 +184,7 @@
     display: none;
     justify-content: center;
     align-items: center;
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 900;
   }
 
@@ -196,7 +195,7 @@
     background: #0d1117;
     border: 1px solid #1f2937;
     border-radius: 14px;
-    padding: 9px 12px;
+    padding: 8px 12px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -218,20 +217,20 @@
     max-width: 95%;
   }
 
-  /* 4. BOTONERA INFERIOR */
+  /* 4. BOTONERA INFERIOR CON BOTÓN DE APAGADO */
   .actions-grid {
     width: 100%;
     flex-shrink: 0;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 7px;
+    gap: 6px;
   }
   .btn {
     background: #161f2c;
     border: 1px solid #2d3748;
     color: #ffffff;
-    padding: 11px 6px;
-    border-radius: 12px;
+    padding: 10px 6px;
+    border-radius: 11px;
     font-size: 13px;
     font-weight: 700;
     display: flex;
@@ -243,6 +242,15 @@
   .btn:active { background: #2d3748; transform: scale(0.98); }
   .btn-danger { border-color: #ef4444; color: #fca5a5; }
   .btn-heli { border-color: #a855f7; color: #d8b4fe; }
+  .btn-stop {
+    grid-column: span 2;
+    background: #2b1115;
+    border-color: #dc2626;
+    color: #fecaca;
+    padding: 11px;
+    font-size: 14px;
+    display: none; /* Solo se muestra cuando el sistema está encendido */
+  }
 </style>
 </head>
 <body>
@@ -259,7 +267,9 @@
   <div class="ooono-wrapper">
     <div class="ooono-container">
       <div id="ledRing" class="led-ring"></div>
-      <div id="mainBtn" class="center-button" onclick="handleMainButton()">
+      <div id="mainBtn" class="center-button"
+           onmousedown="startPressTimer()" onmouseup="endPressTimer()"
+           ontouchstart="startPressTimer()" ontouchend="endPressTimer()">
         <div id="speedDisplay" class="speed-value">OFF</div>
         <div id="speedUnit" class="speed-unit">ACTIVAR MOTO</div>
         <div id="limitBadge" class="limit-badge">80</div>
@@ -268,8 +278,8 @@
   </div>
 
   <div class="alert-box">
-    <div id="alertTitle" class="alert-title">OOONO Moto CAT v4</div>
-    <div id="alertSub" class="alert-sub">Toca el botón central para activar voz y GPS</div>
+    <div id="alertTitle" class="alert-title">OOONO Moto CAT v5</div>
+    <div id="alertSub" class="alert-sub">Toca el centro para activar (Mantén pulsado para apagar)</div>
   </div>
 
   <div class="actions-grid">
@@ -285,10 +295,13 @@
     <button class="btn" onclick="togglePocketMode()">
       🌑 Modo Bolsillo
     </button>
+    <button id="stopBtn" class="btn btn-stop" onclick="stopSystem()">
+      ⏹️ APAGAR RADAR Y GPS
+    </button>
   </div>
 
 <script>
-// 1. REGISTRO DEL SERVICE WORKER Y LIMPIEZA DE CACHÉS ANTIGUOS
+// 1. REGISTRO DEL SERVICE WORKER
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
@@ -318,22 +331,18 @@ async function triggerInstall() {
 
 // 2. BASE DE DATOS INTERNA DE RESPALDO (75 RADARES CLAVE DE BARCELONA Y CATALUNYA)
 const CATALUNYA_STATIC_RADARS = [
-  // Túneles y Tramos Barcelona
   { id: 'bcn-1', lat: 41.4162, lon: 2.1592, vmax: 60, type: 'TRAMO', name: 'Túnel de la Rovira' },
   { id: 'bcn-2', lat: 41.3789, lon: 2.1281, vmax: 60, type: 'TRAMO', name: 'Túnel de Badal' },
   { id: 'bcn-3', lat: 41.4038, lon: 2.1872, vmax: 50, type: 'TRAMO', name: 'Túnel de les Glòries' },
   { id: 'bcn-4', lat: 41.4428, lon: 2.1725, vmax: 80, type: 'TRAMO', name: 'Ronda de Dalt (Karl Marx)' },
-  // Ronda de Dalt (B-20)
   { id: 'bcn-5', lat: 41.4344, lon: 2.1520, vmax: 80, type: 'FIJO', name: 'Ronda de Dalt km 12 (Horta)' },
   { id: 'bcn-6', lat: 41.4021, lon: 2.1042, vmax: 80, type: 'FIJO', name: 'Ronda de Dalt km 4.8 (Esplugues)' },
   { id: 'bcn-7', lat: 41.4465, lon: 2.1882, vmax: 80, type: 'FIJO', name: 'Ronda de Dalt km 14.3 (Trinitat)' },
   { id: 'bcn-8', lat: 41.3892, lon: 2.0915, vmax: 80, type: 'FIJO', name: 'Ronda de Dalt Cornellà/Diagonal' },
-  // Ronda Litoral (B-10)
   { id: 'bcn-9', lat: 41.3665, lon: 2.1770, vmax: 80, type: 'FIJO', name: 'Ronda Litoral km 10 (Mirador)' },
   { id: 'bcn-10', lat: 41.3910, lon: 2.2035, vmax: 80, type: 'FIJO', name: 'Ronda Litoral km 13 (Poblenou)' },
   { id: 'bcn-11', lat: 41.3485, lon: 2.1420, vmax: 80, type: 'FIJO', name: 'Ronda Litoral km 7 (Zona Franca)' },
   { id: 'bcn-12', lat: 41.4215, lon: 2.2210, vmax: 80, type: 'FIJO', name: 'Ronda Litoral Potosí / Bon Pastor' },
-  // Interior Ciudad Barcelona (50 km/h, 30 km/h y Semáforos Foto-Rojo)
   { id: 'bcn-13', lat: 41.3842, lon: 2.1158, vmax: 50, type: 'FIJO', name: 'Av. Diagonal 671 (Entrada BCN)' },
   { id: 'bcn-14', lat: 41.3914, lon: 2.1384, vmax: 50, type: 'FIJO', name: 'Av. Diagonal 563 (L\'Illa)' },
   { id: 'bcn-15', lat: 41.4062, lon: 2.1985, vmax: 50, type: 'FIJO', name: 'Av. Diagonal 110 (Sant Martí)' },
@@ -360,7 +369,6 @@ const CATALUNYA_STATIC_RADARS = [
   { id: 'bcn-36', lat: 41.4090, lon: 2.1550, vmax: 30, type: 'FIJO', name: 'Travessera de Dalt / Gràcia' },
   { id: 'bcn-37', lat: 41.3965, lon: 2.1815, vmax: 50, type: 'SEMÁFORO', name: 'Av. Meridiana / Marina' },
   { id: 'bcn-38', lat: 41.3620, lon: 2.1355, vmax: 50, type: 'FIJO', name: 'Passeig Zona Franca' },
-  // Eje A-2, Baix Llobregat, Anoia y Piera
   { id: 'cat-1', lat: 41.5432, lon: 1.8721, vmax: 100, type: 'FIJO', name: 'A-2 Esparreguera / Collbató' },
   { id: 'cat-2', lat: 41.5680, lon: 1.7850, vmax: 100, type: 'FIJO', name: 'A-2 el Bruc (Montserrat)' },
   { id: 'cat-3', lat: 41.5810, lon: 1.6320, vmax: 120, type: 'FIJO', name: 'A-2 Igualada / Jorba' },
@@ -374,19 +382,16 @@ const CATALUNYA_STATIC_RADARS = [
   { id: 'cat-11', lat: 41.4510, lon: 1.7420, vmax: 90, type: 'FIJO', name: 'C-15 Sant Sadurní / Gelida' },
   { id: 'cat-12', lat: 41.3410, lon: 1.6980, vmax: 100, type: 'FIJO', name: 'N-340 Vilafranca del Penedès' },
   { id: 'cat-13', lat: 41.3850, lon: 1.8820, vmax: 60, type: 'FIJO', name: 'N-340 Vallirana / Cervelló' },
-  // Eje Costa Sur: C-31, C-32, Garraf
   { id: 'cat-14', lat: 41.2825, lon: 1.9810, vmax: 80, type: 'TRAMO', name: 'C-31 Autovía Castelldefels' },
   { id: 'cat-15', lat: 41.3180, lon: 2.0650, vmax: 80, type: 'FIJO', name: 'C-31 El Prat de Llobregat' },
   { id: 'cat-16', lat: 41.3145, lon: 2.0125, vmax: 100, type: 'FIJO', name: 'C-32 Gavà / Viladecans' },
   { id: 'cat-17', lat: 41.2510, lon: 1.8540, vmax: 80, type: 'FIJO', name: 'C-32 Túneles del Garraf / Sitges' },
   { id: 'cat-18', lat: 41.2240, lon: 1.7320, vmax: 100, type: 'FIJO', name: 'C-32 Vilanova i la Geltrú' },
-  // Eje AP-7 y B-30 (Vallès)
   { id: 'cat-19', lat: 41.4789, lon: 2.0412, vmax: 120, type: 'FIJO', name: 'AP-7 Rubí / Castellbisbal' },
   { id: 'cat-20', lat: 41.4910, lon: 2.1150, vmax: 100, type: 'FIJO', name: 'B-30 Cerdanyola / Barberà' },
   { id: 'cat-21', lat: 41.5420, lon: 2.2150, vmax: 120, type: 'FIJO', name: 'AP-7 Santa Perpètua / Mollet' },
   { id: 'cat-22', lat: 41.6120, lon: 2.3450, vmax: 120, type: 'FIJO', name: 'AP-7 Cardedeu / Llinars' },
   { id: 'cat-23', lat: 41.3920, lon: 1.9210, vmax: 120, type: 'FIJO', name: 'AP-7 Castellví de Rosanes' },
-  // Eje Norte: C-58, C-16, C-17, C-55
   { id: 'cat-24', lat: 41.4621, lon: 2.1812, vmax: 80, type: 'FIJO', name: 'C-58 Entrada Trinitat' },
   { id: 'cat-25', lat: 41.5240, lon: 2.1180, vmax: 100, type: 'FIJO', name: 'C-58 Badia / Sabadell' },
   { id: 'cat-26', lat: 41.5610, lon: 2.0320, vmax: 80, type: 'FIJO', name: 'C-58 Terrassa' },
@@ -396,7 +401,6 @@ const CATALUNYA_STATIC_RADARS = [
   { id: 'cat-30', lat: 41.5640, lon: 2.2610, vmax: 80, type: 'FIJO', name: 'C-17 Parets / Montmeló' },
   { id: 'cat-31', lat: 41.6420, lon: 2.2750, vmax: 100, type: 'FIJO', name: 'C-17 Lliçà / La Garriga' },
   { id: 'cat-32', lat: 41.7850, lon: 2.2410, vmax: 80, type: 'FIJO', name: 'C-17 Tagamanent / Centelles' },
-  // Eje Maresme: C-31 Norte y C-32 Norte
   { id: 'cat-33', lat: 41.4420, lon: 2.2410, vmax: 80, type: 'FIJO', name: 'C-31 Badalona' },
   { id: 'cat-34', lat: 41.4910, lon: 2.3210, vmax: 100, type: 'FIJO', name: 'C-32 Alella / El Masnou' },
   { id: 'cat-35', lat: 41.5180, lon: 2.4120, vmax: 100, type: 'FIJO', name: 'C-32 Mataró / Cabrera de Mar' },
@@ -420,9 +424,34 @@ let prevDistanceMap = new Map();
 let audioCtx = null;
 let keepAliveAudio = null;
 let wakeLock = null;
+let gpsWatchId = null;
+let heliIntervalId = null;
 let lastFetchCoords = { lat: 0, lon: 0 };
 
-// 3. MOTOR DE AUDIO BLUETOOTH CONTINUO (Evita silencios con pantalla apagada o Spotify)
+// Control de pulsación corta vs larga (1,5s) en el botón central
+let pressTimer = null;
+let longPressTriggered = false;
+
+function startPressTimer() {
+  longPressTriggered = false;
+  pressTimer = setTimeout(() => {
+    if (systemRunning) {
+      longPressTriggered = true;
+      stopSystem();
+    }
+  }, 1400);
+}
+
+function endPressTimer() {
+  if (pressTimer) {
+    clearTimeout(pressTimer);
+    pressTimer = null;
+  }
+  if (!longPressTriggered) {
+    handleMainButton();
+  }
+}
+
 function startBackgroundAudioLock() {
   if (!audioCtx) {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -435,8 +464,8 @@ function startBackgroundAudioLock() {
     keepAliveAudio = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
     keepAliveAudio.loop = true;
     keepAliveAudio.volume = 0.01;
-    keepAliveAudio.play().catch(() => {});
   }
+  keepAliveAudio.play().catch(() => {});
 }
 
 function playOoonoBeep(pattern = 'RADAR') {
@@ -464,6 +493,8 @@ function playOoonoBeep(pattern = 'RADAR') {
     tone(3200, 0.32, 0.14, 'square'); tone(2200, 0.48, 0.20, 'square');
   } else if (pattern === 'HELI') {
     tone(1200, 0, 0.16); tone(1800, 0.18, 0.16); tone(2700, 0.36, 0.30);
+  } else if (pattern === 'OFF') {
+    tone(1800, 0, 0.18, 'sine'); tone(900, 0.20, 0.28, 'sine');
   }
 }
 
@@ -495,28 +526,72 @@ async function startSystem() {
   systemRunning = true;
 
   document.getElementById('statusDot').className = 'dot active';
-  document.getElementById('statusText').innerText = 'Descargando Red Catalana...';
+  document.getElementById('statusText').innerText = 'Protección Activa (2º Plano)';
   document.getElementById('speedDisplay').innerText = '0';
   document.getElementById('speedUnit').innerText = 'KM/H';
+  document.getElementById('stopBtn').style.display = 'flex';
 
   if ('wakeLock' in navigator) {
     try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
   }
 
-  speakAlert('OOONO Moto activado. Descargando radares.', 'RADAR');
+  speakAlert('OOONO Moto activado.', 'RADAR');
 
   fetchLiveRadars(userLat, userLon);
   fetchHelicopters();
 
   if ('geolocation' in navigator) {
-    navigator.geolocation.watchPosition(onGpsUpdate, onGpsError, {
+    if (gpsWatchId !== null) navigator.geolocation.clearWatch(gpsWatchId);
+    gpsWatchId = navigator.geolocation.watchPosition(onGpsUpdate, onGpsError, {
       enableHighAccuracy: true,
       maximumAge: 1000,
       timeout: 8000
     });
   }
 
-  setInterval(fetchHelicopters, 15000);
+  if (heliIntervalId) clearInterval(heliIntervalId);
+  heliIntervalId = setInterval(fetchHelicopters, 15000);
+}
+
+// FUNCIÓN DE APAGADO TOTAL (Desconecta GPS, Audio Bluetooth, Pantalla y Escáner)
+async function stopSystem() {
+  systemRunning = false;
+  currentSpeed = 0;
+
+  if (gpsWatchId !== null) {
+    navigator.geolocation.clearWatch(gpsWatchId);
+    gpsWatchId = null;
+  }
+  if (heliIntervalId !== null) {
+    clearInterval(heliIntervalId);
+    heliIntervalId = null;
+  }
+  if (keepAliveAudio) {
+    keepAliveAudio.pause();
+  }
+  if (wakeLock !== null) {
+    try { await wakeLock.release(); } catch (e) {}
+    wakeLock = null;
+  }
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
+
+  playOoonoBeep('OFF');
+
+  // Restaurar brillo si estaba en modo bolsillo
+  pocketMode = false;
+  document.body.style.opacity = '1';
+
+  document.getElementById('statusDot').className = 'dot';
+  document.getElementById('statusText').innerText = 'Sistema Desconectado';
+  document.getElementById('speedDisplay').innerText = 'OFF';
+  document.getElementById('speedUnit').innerText = 'ACTIVAR MOTO';
+  document.getElementById('ledRing').className = 'led-ring';
+  document.getElementById('limitBadge').style.display = 'none';
+  document.getElementById('stopBtn').style.display = 'none';
+  document.getElementById('alertTitle').innerText = 'Sistema Apagado';
+  document.getElementById('alertSub').innerText = 'GPS y Audio Bluetooth desconectados. Cero consumo.';
 }
 
 function forceReloadRadars() {
@@ -526,6 +601,7 @@ function forceReloadRadars() {
 }
 
 function onGpsUpdate(pos) {
+  if (!systemRunning) return;
   const newLat = pos.coords.latitude;
   const newLon = pos.coords.longitude;
   currentSpeed = pos.coords.speed ? Math.round(pos.coords.speed * 3.6) : 0;
@@ -551,11 +627,11 @@ function onGpsUpdate(pos) {
 }
 
 function onGpsError(err) {
+  if (!systemRunning) return;
   document.getElementById('statusDot').className = 'dot warn';
   document.getElementById('alertSub').innerText = 'Buscando señal GPS exterior...';
 }
 
-// 4. DESCARGA MULTI-SERVIDOR AMPLIADA (Nodos + Relaciones de Control de Tramo/Velocidad SCT)
 async function fetchBlitzerPois(minLat, minLon, maxLat, maxLon) {
   const target = `https://cdn2.atudo.net/api/4.0/pois.php?type=0,1,2,3,4,5,6,101,102,103,104,105,106,107&box=${minLat},${minLon},${maxLat},${maxLon}`;
   const proxies = [
@@ -576,7 +652,6 @@ async function fetchBlitzerPois(minLat, minLon, maxLat, maxLon) {
 }
 
 async function fetchOsmRadars(minLat, minLon, maxLat, maxLon) {
-  // Busca cámaras fijas, radares de tramo, semáforos y relaciones de control de toda la zona
   const query = `[out:json][timeout:20];(
     node["highway"="speed_camera"](${minLat},${minLon},${maxLat},${maxLon});
     node["enforcement"](${minLat},${minLon},${maxLat},${maxLon});
@@ -613,7 +688,6 @@ async function fetchOsmRadars(minLat, minLon, maxLat, maxLon) {
 }
 
 async function fetchLiveRadars(lat, lon) {
-  // Caja de 0.45 grados (~50 km alrededor)
   const delta = 0.45;
   const minLat = (lat - delta).toFixed(4);
   const maxLat = (lat + delta).toFixed(4);
@@ -660,9 +734,11 @@ async function fetchLiveRadars(lat, lon) {
   });
 
   activePois = deduplicated;
-  document.getElementById('statusText').innerText = 'Protección Activa (2º Plano)';
+  if (systemRunning) {
+    document.getElementById('statusText').innerText = 'Protección Activa (2º Plano)';
+    checkProximityAlerts();
+  }
   updateCounterUI();
-  checkProximityAlerts();
 }
 
 async function fetchHelicopters() {
@@ -701,8 +777,8 @@ async function fetchHelicopters() {
   } catch (e) {}
 }
 
-// 5. MOTOR DE AVISOS A 800m Y 280m CON CONO DE RUMBO
 function checkProximityAlerts() {
+  if (!systemRunning) return;
   const firstWarnDist = currentSpeed > 70 ? 800 : 480;
   const secondWarnDist = currentSpeed > 70 ? 280 : 170;
 
