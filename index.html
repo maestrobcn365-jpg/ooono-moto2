@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>OOONO Moto CAT Pro</title>
+
+<!-- ENLACE AL ARCHIVO MANIFEST.JSON REAL -->
+<link rel="manifest" href="./manifest.json">
+
+<style>
+  :root {
+    --ring-color: #1e293b;
+    --ring-glow: transparent;
+  }
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  html, body {
+    width: 100%;
+    height: 100%;
+    height: 100dvh;
+    background-color: #000000;
+    color: #ffffff;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    overflow: hidden;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+    gap: 6px;
+  }
+
+  .top-bar {
+    width: 100%;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #0d1117;
+    padding: 8px 12px;
+    border-radius: 12px;
+    border: 1px solid #1f2937;
+    font-size: 12px;
+  }
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+  }
+  .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #ef4444;
+  }
+  .dot.active { background: #10b981; box-shadow: 0 0 8px #10b981; }
+  .dot.warn { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
+
+  #installBtn {
+    background: linear-gradient(135deg, #059669, #10b981);
+    color: #ffffff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 11px;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+  }
+
+  .ooono-wrapper {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 0;
+  }
+  .ooono-container {
+    position: relative;
+    width: min(60vw, 35dvh, 245px);
+    height: min(60vw, 35dvh, 245px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .led-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 14px solid var(--ring-color);
+    box-shadow: 0 0 30px var(--ring-glow), inset 0 0 20px var(--ring-glow);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .led-ring.flash-red { animation: pulseRed 0.4s infinite alternate; }
+  .led-ring.flash-orange { animation: pulseOrange 0.75s infinite alternate; }
+  .led-ring.flash-purple { animation: pulsePurple 0.35s infinite alternate; }
+  .led-ring.flash-blue { animation: pulseBlue 0.6s infinite alternate; }
+
+  @keyframes pulseRed {
+    from { border-color: #ff0033; box-shadow: 0 0 55px #ff0033, inset 0 0 25px #ff0033; }
+    to { border-color: #33000a; box-shadow: 0 0 8px #ff0033; }
+  }
+  @keyframes pulseOrange {
+    from { border-color: #ff8800; box-shadow: 0 0 40px #ff8800, inset 0 0 18px #ff8800; }
+    to { border-color: #331a00; box-shadow: 0 0 5px #ff8800; }
+  }
+  @keyframes pulsePurple {
+    from { border-color: #a855f7; box-shadow: 0 0 60px #a855f7, inset 0 0 30px #3b82f6; }
+    to { border-color: #1e1b4b; box-shadow: 0 0 12px #3b82f6; }
+  }
+  @keyframes pulseBlue {
+    from { border-color: #00d2ff; box-shadow: 0 0 45px #00d2ff, inset 0 0 20px #00d2ff; }
+    to { border-color: #002b36; box-shadow: 0 0 8px #00d2ff; }
+  }
+
+  .center-button {
+    width: calc(100% - 42px);
+    height: calc(100% - 42px);
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #1f2937, #090d16);
+    border: 3px solid #374151;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    z-index: 2;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.85);
+    text-align: center;
+    padding: 8px;
+  }
+  .center-button:active { transform: scale(0.95); }
+  .speed-value {
+    font-size: clamp(42px, 7.5dvh, 58px);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -2px;
+  }
+  .speed-unit {
+    font-size: 11px;
+    color: #9ca3af;
+    text-transform: uppercase;
+    margin-top: 3px;
+    letter-spacing: 1px;
+  }
+  .limit-badge {
+    margin-top: 6px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #000000;
+    border: 5px solid #ef4444;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    font-weight: 900;
+  }
+
+  .alert-box {
+    width: 100%;
+    flex-shrink: 0;
+    background: #0d1117;
+    border: 1px solid #1f2937;
+    border-radius: 14px;
+    padding: 9px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+  .alert-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #10b981;
+  }
+  .alert-sub {
+    font-size: 12px;
+    color: #9ca3af;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 95%;
+  }
+
+  .actions-grid {
+    width: 100%;
+    flex-shrink: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+  }
+  .btn {
+    background: #161f2c;
+    border: 1px solid #2d3748;
+    color: #ffffff;
+    padding: 11px 6px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    cursor: pointer;
+  }
+  .btn:active { background: #2d3748; transform: scale(0.98); }
+  .btn-danger { border-color: #ef4444; color: #fca5a5; }
+  .btn-heli { border-color: #a855f7; color: #d8b4fe; }
+</style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <div class="status-pill">
+      <div id="statusDot" class="dot"></div>
+      <span id="statusText">Toca el centro para iniciar</span>
+    </div>
+    <button id="installBtn" onclick="triggerInstall()">📲 INSTALAR APP</button>
+    <div id="dbCounter" style="color:#9ca3af; font-weight:600;">📍 0 | 🚁 0</div>
+  </div>
+
+  <div class="ooono-wrapper">
+    <div class="ooono-container">
+      <div id="ledRing" class="led-ring"></div>
+      <div id="mainBtn" class="center-button" onclick="handleMainButton()">
+        <div id="speedDisplay" class="speed-value">OFF</div>
+        <div id="speedUnit" class="speed-unit">ACTIVAR MOTO</div>
+        <div id="limitBadge" class="limit-badge">80</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert-box">
+    <div id="alertTitle" class="alert-title">OOONO Moto CAT Pro</div>
+    <div id="alertSub" class="alert-sub">Toca el botón central para activar voz y GPS</div>
+  </div>
+
+  <div class="actions-grid">
+    <button class="btn btn-danger" onclick="reportIncident('MÓVIL', 'Radar Móvil')">
+      🚨 Reportar Móvil
+    </button>
+    <button class="btn btn-heli" onclick="reportIncident('HELI', 'Helicóptero Trànsit')">
+      🚁 Reportar Heli
+    </button>
+    <button class="btn" onclick="testIntercomAudio()">
+      🔊 Probar Casco
+    </button>
+    <button class="btn" onclick="togglePocketMode()">
+      🌑 Modo Bolsillo
+    </button>
+  </div>
+
+<script>
+// 1. REGISTRO DEL SERVICE WORKER (Obligatorio para instalar PWA real en Android)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installBtn').style.display = 'flex';
+});
+
+async function triggerInstall() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      document.getElementById('installBtn').style.display = 'none';
+    }
+    deferredPrompt = null;
+  }
+}
+
+// 2. BASE DE DATOS FIJA DE RESPALDO (BARCELONA Y CATALUNYA)
+const CATALUNYA_STATIC_RADARS = [
+  { id: 'bcn-1', lat: 41.4162, lon: 2.1592, vmax: 60, type: 'TRAMO', name: 'Túnel de la Rovira' },
+  { id: 'bcn-2', lat: 41.3789, lon: 2.1281, vmax: 60, type: 'TRAMO', name: 'Túnel de Badal' },
+  { id: 'bcn-3', lat: 41.4038, lon: 2.1872, vmax: 50, type: 'TRAMO', name: 'Túnel de les Glòries' },
+  { id: 'bcn-4', lat: 41.4428, lon: 2.1725, vmax: 80, type: 'TRAMO', name: 'Ronda de Dalt (Karl Marx)' },
+  { id: 'bcn-5', lat: 41.4344, lon: 2.1520, vmax: 80, type: 'FIJO', name: 'Ronda de Dalt km 12' },
+  { id: 'bcn-6', lat: 41.4021, lon: 2.1042, vmax: 80, type: 'FIJO', name: 'Ronda de Dalt Esplugues' },
+  { id: 'bcn-7', lat: 41.3665, lon: 2.1770, vmax: 80, type: 'FIJO', name: 'Ronda Litoral Mirador' },
+  { id: 'bcn-8', lat: 41.3910, lon: 2.2035, vmax: 80, type: 'FIJO', name: 'Ronda Litoral Poblenou' },
+  { id: 'bcn-9', lat: 41.3842, lon: 2.1158, vmax: 50, type: 'FIJO', name: 'Av. Diagonal 671' },
+  { id: 'bcn-10', lat: 41.3914, lon: 2.1384, vmax: 50, type: 'FIJO', name: 'Av. Diagonal 563' },
+  { id: 'bcn-11', lat: 41.4045, lon: 2.1895, vmax: 50, type: 'FIJO', name: 'Gran Via / Glòries' },
+  { id: 'bcn-12', lat: 41.3752, lon: 2.1501, vmax: 50, type: 'FIJO', name: 'Gran Via / Espanya' },
+  { id: 'bcn-13', lat: 41.3853, lon: 2.1558, vmax: 50, type: 'FIJO', name: 'Carrer Aragó 174' },
+  { id: 'bcn-14', lat: 41.3976, lon: 2.1524, vmax: 50, type: 'FIJO', name: 'Carrer Balmes 201' },
+  { id: 'bcn-15', lat: 41.3821, lon: 2.1432, vmax: 30, type: 'FIJO', name: 'Carrer Entença' },
+  { id: 'bcn-16', lat: 41.3895, lon: 2.1481, vmax: 30, type: 'FIJO', name: 'Carrer Muntaner' },
+  { id: 'cat-1', lat: 41.5432, lon: 1.8721, vmax: 100, type: 'FIJO', name: 'A-2 Esparreguera' },
+  { id: 'cat-2', lat: 41.5680, lon: 1.7850, vmax: 100, type: 'FIJO', name: 'A-2 el Bruc' },
+  { id: 'cat-3', lat: 41.4712, lon: 1.9245, vmax: 100, type: 'FIJO', name: 'A-2 Sant Andreu' },
+  { id: 'cat-4', lat: 41.3522, lon: 2.0415, vmax: 80, type: 'FIJO', name: 'A-2 Cornellà' },
+  { id: 'cat-5', lat: 41.5120, lon: 1.7890, vmax: 80, type: 'FIJO', name: 'B-224 Piera / Masquefa' },
+  { id: 'cat-6', lat: 41.2825, lon: 1.9810, vmax: 80, type: 'TRAMO', name: 'C-31 Castelldefels' },
+  { id: 'cat-7', lat: 41.3145, lon: 2.0125, vmax: 100, type: 'FIJO', name: 'C-32 Gavà' },
+  { id: 'cat-8', lat: 41.4621, lon: 2.1812, vmax: 80, type: 'FIJO', name: 'C-58 Trinitat' },
+  { id: 'cat-9', lat: 41.4789, lon: 2.0412, vmax: 120, type: 'FIJO', name: 'AP-7 Rubí' }
+];
+
+let systemRunning = false;
+let currentSpeed = 0;
+let userLat = 41.3874;
+let userLon = 2.1686;
+let userHeading = null;
+let prevLat = null;
+let prevLon = null;
+
+let activePois = [...CATALUNYA_STATIC_RADARS];
+let customReports = JSON.parse(localStorage.getItem('ooono_custom_reports') || '[]');
+let activeHelis = [];
+let alertedStage = new Map(); // Guarda fase de aviso: 1 (lejos ~700m) y 2 (cerca ~250m)
+let prevDistanceMap = new Map();
+let audioCtx = null;
+let keepAliveAudio = null;
+let wakeLock = null;
+let lastFetchCoords = { lat: 0, lon: 0 };
+
+/**
+ * 3. MOTOR DE AUDIO ANTI-SUEÑO PARA ANDROID Y BLUETOOTH
+ * Crea un bucle de audio WAV silencioso que impide que Android suspenda el GPS y la voz
+ * cuando bloqueas el móvil o llevas Spotify/RoadSync abierto.
+ */
+function startBackgroundAudioLock() {
+  if (!audioCtx) {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AudioContext();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  if (!keepAliveAudio) {
+    // Archivo WAV de 1 segundo de silencio puro en base64
+    keepAliveAudio = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
+    keepAliveAudio.loop = true;
+    keepAliveAudio.volume = 0.01;
+    keepAliveAudio.play().catch(() => {});
+  }
+}
+
+function playOoonoBeep(pattern = 'RADAR') {
+  if (!audioCtx) startBackgroundAudioLock();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+
+  const now = audioCtx.currentTime;
+  const tone = (freq, start, duration, wave = 'sawtooth') => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = wave;
+    osc.frequency.setValueAtTime(freq, now + start);
+    gain.gain.setValueAtTime(1.0, now + start);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + start + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now + start);
+    osc.stop(now + start + duration);
+  };
+
+  if (pattern === 'RADAR') {
+    tone(2500, 0, 0.15); tone(2500, 0.20, 0.15); tone(2900, 0.42, 0.28);
+  } else if (pattern === 'OVERSPEED') {
+    tone(3200, 0, 0.14, 'square'); tone(2200, 0.16, 0.14, 'square');
+    tone(3200, 0.32, 0.14, 'square'); tone(2200, 0.48, 0.20, 'square');
+  } else if (pattern === 'HELI') {
+    tone(1200, 0, 0.16); tone(1800, 0.18, 0.16); tone(2700, 0.36, 0.30);
+  }
+}
+
+function speakAlert(text, beepPattern = 'RADAR') {
+  playOoonoBeep(beepPattern);
+  setTimeout(() => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const msg = new SpeechSynthesisUtterance(text);
+      msg.lang = 'es-ES';
+      msg.rate = 1.05;
+      msg.pitch = 1.0;
+      msg.volume = 1.0;
+      window.speechSynthesis.speak(msg);
+    }
+  }, 700);
+}
+
+async function handleMainButton() {
+  if (!systemRunning) {
+    await startSystem();
+  } else {
+    reportIncident('MÓVIL', 'Radar Móvil');
+  }
+}
+
+async function startSystem() {
+  startBackgroundAudioLock();
+  systemRunning = true;
+
+  document.getElementById('statusDot').className = 'dot active';
+  document.getElementById('statusText').innerText = 'Protección Activa (2º Plano)';
+  document.getElementById('speedDisplay').innerText = '0';
+  document.getElementById('speedUnit').innerText = 'KM/H';
+  document.getElementById('alertTitle').innerText = 'Escaneando Ruta';
+  document.getElementById('alertSub').innerText = 'Conectado a Blitzer.de + OSM + Pegasus';
+
+  if ('wakeLock' in navigator) {
+    try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
+  }
+
+  speakAlert('OOONO Moto activado. Radar y audio listos.', 'RADAR');
+
+  if ('geolocation' in navigator) {
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      userLat = pos.coords.latitude;
+      userLon = pos.coords.longitude;
+      await fetchLiveRadars(userLat, userLon);
+      fetchHelicopters();
+    }, () => {}, { enableHighAccuracy: true });
+
+    navigator.geolocation.watchPosition(onGpsUpdate, onGpsError, {
+      enableHighAccuracy: true,
+      maximumAge: 1000,
+      timeout: 8000
+    });
+  }
+
+  setInterval(fetchHelicopters, 15000);
+}
+
+function onGpsUpdate(pos) {
+  const newLat = pos.coords.latitude;
+  const newLon = pos.coords.longitude;
+  currentSpeed = pos.coords.speed ? Math.round(pos.coords.speed * 3.6) : 0;
+  document.getElementById('speedDisplay').innerText = currentSpeed;
+
+  if (pos.coords.heading !== null && !isNaN(pos.coords.heading) && currentSpeed > 5) {
+    userHeading = pos.coords.heading;
+  } else if (prevLat !== null && calcDistance(prevLat, prevLon, newLat, newLon) > 5) {
+    userHeading = calcBearing(prevLat, prevLon, newLat, newLon);
+  }
+
+  prevLat = userLat; prevLon = userLon;
+  userLat = newLat; userLon = newLon;
+
+  const distFromLastFetch = calcDistance(userLat, userLon, lastFetchCoords.lat, lastFetchCoords.lon);
+  if (distFromLastFetch > 2500 || lastFetchCoords.lat === 0) {
+    lastFetchCoords = { lat: userLat, lon: userLon };
+    fetchLiveRadars(userLat, userLon);
+    fetchHelicopters();
+  }
+
+  checkProximityAlerts();
+}
+
+function onGpsError(err) {
+  document.getElementById('statusDot').className = 'dot warn';
+  document.getElementById('alertSub').innerText = 'Buscando señal GPS exterior...';
+}
+
+async function fetchWithFallbackProxy(targetUrl) {
+  const proxies = [
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
+    `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`
+  ];
+  for (const p of proxies) {
+    try {
+      const r = await fetch(p, { signal: AbortSignal.timeout(6000) });
+      if (r.ok) return await r.json();
+    } catch (e) {}
+  }
+  return null;
+}
+
+async function fetchLiveRadars(lat, lon) {
+  const delta = 0.25;
+  const minLat = (lat - delta).toFixed(5);
+  const maxLat = (lat + delta).toFixed(5);
+  const minLon = (lon - delta).toFixed(5);
+  const maxLon = (lon + delta).toFixed(5);
+
+  const fourHoursAgo = Date.now() - (4 * 3600 * 1000);
+  customReports = customReports.filter(r => !r.ts || r.ts > fourHoursAgo);
+
+  let combined = [...CATALUNYA_STATIC_RADARS, ...customReports];
+
+  const blitzerUrl = `https://cdn2.atudo.net/api/4.0/pois.php?type=0,1,2,3,4,5,6,101,102,103,104,105,106,107&box=${minLat},${minLon},${maxLat},${maxLon}`;
+  const blitzerData = await fetchWithFallbackProxy(blitzerUrl);
+  if (blitzerData && blitzerData.pois) {
+    blitzerData.pois.forEach(p => {
+      const isMobile = parseInt(p.type) < 50;
+      combined.push({
+        id: 'blz-' + p.id,
+        lat: parseFloat(p.lat),
+        lon: parseFloat(p.lng),
+        vmax: parseInt(p.vmax) || 0,
+        type: isMobile ? 'MÓVIL' : 'FIJO',
+        name: isMobile ? 'Radar Móvil (Blitzer.de)' : 'Radar Fijo'
+      });
+    });
+  }
+
+  try {
+    const overpassQuery = `[out:json][timeout:10];node["highway"="speed_camera"](${minLat},${minLon},${maxLat},${maxLon});out body;`;
+    const osmRes = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`);
+    if (osmRes.ok) {
+      const osmData = await osmRes.json();
+      osmData.elements.forEach(el => {
+        combined.push({
+          id: 'osm-' + el.id,
+          lat: el.lat,
+          lon: el.lon,
+          vmax: el.tags && el.tags.maxspeed ? parseInt(el.tags.maxspeed) : 0,
+          type: 'FIJO',
+          name: (el.tags && el.tags.name) ? el.tags.name : 'Radar Fijo OSM'
+        });
+      });
+    }
+  } catch (e) {}
+
+  const deduplicated = [];
+  combined.forEach(item => {
+    const exists = deduplicated.some(existing => calcDistance(item.lat, item.lon, existing.lat, existing.lon) < 35);
+    if (!exists) deduplicated.push(item);
+  });
+
+  activePois = deduplicated;
+  updateCounterUI();
+}
+
+async function fetchHelicopters() {
+  if (!systemRunning) return;
+  try {
+    const url = `https://api.airplanes.live/v2/point/${userLat.toFixed(4)}/${userLon.toFixed(4)}/25`;
+    const res = await fetch(url);
+    if (!res.ok) return;
+    const data = await res.json();
+    const detected = [];
+
+    if (data && data.ac) {
+      data.ac.forEach(ac => {
+        if (!ac.lat || !ac.lon) return;
+        const altMeters = (ac.alt_baro || 0) * 0.3048;
+        const speedKmh = (ac.gs || 0) * 1.852;
+        const callsign = (ac.flight || '').toUpperCase().trim();
+        const type = (ac.t || '').toUpperCase().trim();
+
+        const isHeliModel = ['AS55', 'EC35', 'H135', 'EC45', 'B06', 'R44', 'A109'].includes(type);
+        const isPoliceCall = callsign.includes('DGT') || callsign.includes('MOSSOS') || callsign.includes('TRANSIT') || callsign.includes('POL');
+        const isSurveillanceFlight = (altMeters > 110 && altMeters < 920 && speedKmh > 35 && speedKmh < 215);
+
+        if (isHeliModel || isPoliceCall || isSurveillanceFlight) {
+          detected.push({
+            id: 'heli-' + ac.hex,
+            lat: ac.lat, lon: ac.lon,
+            alt: Math.round(altMeters), speed: Math.round(speedKmh),
+            callsign: callsign || type || 'Vuelo Bajo'
+          });
+        }
+      });
+    }
+    activeHelis = detected;
+    updateCounterUI();
+  } catch (e) {}
+}
+
+/**
+ * 4. DETECCIÓN DE RADARES CON DOBLE AVISO (800m y 250m)
+ */
+function checkProximityAlerts() {
+  const firstWarnDist = currentSpeed > 70 ? 800 : 480;
+  const secondWarnDist = currentSpeed > 70 ? 280 : 170;
+
+  let closestAheadRadar = null;
+  let minAheadDist = 99999;
+
+  activePois.forEach(poi => {
+    const d = calcDistance(userLat, userLon, poi.lat, poi.lon);
+    const prevD = prevDistanceMap.get(poi.id) || d;
+    prevDistanceMap.set(poi.id, d);
+
+    // Ampliado a 75 grados para que también avise en curvas de carretera
+    let isAhead = true;
+    if (userHeading !== null && currentSpeed > 15 && d > 70) {
+      const bearingToPoi = calcBearing(userLat, userLon, poi.lat, poi.lon);
+      const angleDiff = Math.abs(((bearingToPoi - userHeading + 540) % 360) - 180);
+      isAhead = angleDiff <= 75;
+    }
+    const isMovingAway = (d > prevD + 4) && d < 160;
+
+    if (isAhead && !isMovingAway && d < minAheadDist) {
+      minAheadDist = d;
+      closestAheadRadar = poi;
+    }
+  });
+
+  let closestHeli = null;
+  let minHeliDist = 99999;
+  activeHelis.forEach(h => {
+    const d = calcDistance(userLat, userLon, h.lat, h.lon);
+    if (d < minHeliDist) { minHeliDist = d; closestHeli = h; }
+  });
+
+  const ring = document.getElementById('ledRing');
+  const badge = document.getElementById('limitBadge');
+
+  if (closestAheadRadar && minAheadDist <= firstWarnDist) {
+    const distRounded = Math.max(10, Math.round(minAheadDist / 10) * 10);
+    const isOverspeed = closestAheadRadar.vmax > 0 && currentSpeed > (closestAheadRadar.vmax + 2);
+
+    ring.className = (closestAheadRadar.type === 'MÓVIL') ? 
+      (isOverspeed ? 'led-ring flash-red' : 'led-ring flash-blue') : 
+      (isOverspeed ? 'led-ring flash-red' : 'led-ring flash-orange');
+
+    document.getElementById('alertTitle').innerText = `⚠️ ${closestAheadRadar.type} A ${distRounded}m`;
+    document.getElementById('alertSub').innerText = closestAheadRadar.name;
+
+    if (closestAheadRadar.vmax > 0) {
+      badge.style.display = 'flex';
+      badge.innerText = closestAheadRadar.vmax;
+    } else {
+      badge.style.display = 'none';
+    }
+
+    const currentStage = alertedStage.get(closestAheadRadar.id) || 0;
+    const limitText = closestAheadRadar.vmax > 0 ? `, límite ${closestAheadRadar.vmax}` : '';
+
+    // Primer aviso al entrar en zona (800m / 480m)
+    if (currentStage === 0) {
+      alertedStage.set(closestAheadRadar.id, 1);
+      speakAlert(`Atención, radar ${closestAheadRadar.type.toLowerCase()} a ${distRounded} metros${limitText}`, isOverspeed ? 'OVERSPEED' : 'RADAR');
+    } 
+    // Segundo aviso de confirmación cuando estás encima (280m / 170m)
+    else if (currentStage === 1 && minAheadDist <= secondWarnDist) {
+      alertedStage.set(closestAheadRadar.id, 2);
+      if (isOverspeed) {
+        speakAlert(`Frena, límite ${closestAheadRadar.vmax}`, 'OVERSPEED');
+      } else {
+        playOoonoBeep('RADAR');
+      }
+    }
+    return;
+  }
+
+  if (closestHeli && minHeliDist <= 4500) {
+    const kmDist = (minHeliDist / 1000).toFixed(1);
+    ring.className = 'led-ring flash-purple';
+    badge.style.display = 'none';
+    document.getElementById('alertTitle').innerText = `🚁 HELICÓPTERO A ${kmDist} KM`;
+    document.getElementById('alertSub').innerText = `Alt: ${closestHeli.alt}m | Vel: ${closestHeli.speed} km/h`;
+
+    if (!alertedStage.has(closestHeli.id)) {
+      alertedStage.set(closestHeli.id, 1);
+      speakAlert(`Alerta aérea. Helicóptero a ${kmDist} kilómetros.`, 'HELI');
+    }
+    return;
+  }
+
+  ring.className = 'led-ring';
+  badge.style.display = 'none';
+  if (closestAheadRadar && minAheadDist < 15000) {
+    document.getElementById('alertTitle').innerText = 'Ruta Vigilada';
+    document.getElementById('alertSub').innerText = `Próximo: ${(minAheadDist / 1000).toFixed(1)} km (${closestAheadRadar.name})`;
+  } else {
+    document.getElementById('alertTitle').innerText = 'Ruta Protegida';
+    document.getElementById('alertSub').innerText = `${activePois.length} radares cargados en tu zona`;
+  }
+}
+
+function reportIncident(type, label) {
+  if (!systemRunning) startSystem();
+  const newPoi = {
+    id: 'usr-' + Date.now(),
+    lat: userLat, lon: userLon,
+    vmax: currentSpeed > 20 ? Math.round(currentSpeed / 10) * 10 : 80,
+    type: type, name: `${label} (Reportado)`, ts: Date.now()
+  };
+  customReports.push(newPoi);
+  localStorage.setItem('ooono_custom_reports', JSON.stringify(customReports));
+  activePois.push(newPoi);
+  updateCounterUI();
+  speakAlert(`${label} guardado.`, type === 'HELI' ? 'HELI' : 'RADAR');
+}
+
+function testIntercomAudio() {
+  if (!systemRunning) startSystem();
+  const ring = document.getElementById('ledRing');
+  ring.className = 'led-ring flash-red';
+  document.getElementById('limitBadge').style.display = 'flex';
+  document.getElementById('limitBadge').innerText = '80';
+  speakAlert('Prueba de intercomunicador. Radar móvil a 300 metros, límite 80.', 'RADAR');
+  setTimeout(() => { ring.className = 'led-ring'; }, 4000);
+}
+
+let pocketMode = false;
+function togglePocketMode() {
+  pocketMode = !pocketMode;
+  document.body.style.opacity = pocketMode ? '0.08' : '1';
+  speakAlert(pocketMode ? 'Modo bolsillo activado' : 'Pantalla normal', 'RADAR');
+}
+
+function updateCounterUI() {
+  document.getElementById('dbCounter').innerText = `📍 ${activePois.length} | 🚁 ${activeHelis.length}`;
+}
+
+function calcDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function calcBearing(lat1, lon1, lat2, lon2) {
+  const φ1 = lat1 * Math.PI / 180, φ2 = lat2 * Math.PI / 180, Δλ = (lon2 - lon1) * Math.PI / 180;
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+  return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+}
+
+window.addEventListener('load', () => {
+  customReports = [];
+  localStorage.removeItem('ooono_custom_reports');
+  activePois = [...CATALUNYA_STATIC_RADARS];
+  updateCounterUI();
+  if (window.location.search.includes('auto=1')) {
+    setTimeout(() => startSystem(), 700);
+  }
+});
+</script>
+</body>
+</html>
