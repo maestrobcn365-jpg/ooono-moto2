@@ -1,21 +1,28 @@
-const CACHE_NAME = 'ooono-moto-v3';
-const ASSETS = ['./', './index.html', './manifest.json'];
-
 self.addEventListener('install', (e) => {
   self.skipWaiting();
-  e.waitUntil(caches.open(CACHE_NAME).then((c) => c.addAll(ASSETS)));
 });
 
 self.addEventListener('activate', (e) => {
   e.waitUntil(self.clients.claim());
 });
 
-self.addEventListener('fetch', (e) => {
-  // Si la petición es a internet (Blitzer, OSM, Helicópteros), NO tocarla, dejarla pasar directo
-  if (!e.request.url.startsWith(self.location.origin)) {
-    return;
+// Escuchar mensajes desde la app principal para lanzar notificaciones nativas
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
+    const { title, body } = event.data;
+    self.registration.showNotification(title, {
+      body: body,
+      icon: 'https://cdn-icons-png.flaticon.com/192/2555/2555013.png',
+      badge: 'https://cdn-icons-png.flaticon.com/192/2555/2555013.png',
+      tag: 'ooono-radar-alert',
+      renotify: true,
+      vibrate: [200, 100, 200],
+      requireInteraction: false
+    });
   }
-  e.respondWith(
-    fetch(e.request).catch(() => caches.match(e.request))
-  );
+});
+
+self.addEventListener('fetch', (e) => {
+  if (!e.request.url.startsWith(self.location.origin)) return;
+  e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
 });
