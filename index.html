@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>OOONO Moto CAT Pro</title>
 
+<!-- Enlace al archivo manifest.json de tu repositorio -->
 <link rel="manifest" href="./manifest.json">
 
 <style>
@@ -42,6 +43,7 @@
     gap: 6px;
   }
 
+  /* 1. BARRA SUPERIOR */
   .top-bar {
     width: 100%;
     flex-shrink: 0;
@@ -69,16 +71,33 @@
   .dot.active { background: #10b981; box-shadow: 0 0 8px #10b981; }
   .dot.warn { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
 
-  #dbCounter {
-    color: #10b981;
-    font-weight: 700;
-    background: #161f2c;
-    padding: 4px 8px;
+  #installBtn {
+    background: linear-gradient(135deg, #059669, #10b981);
+    color: #ffffff;
+    border: none;
+    padding: 6px 10px;
     border-radius: 8px;
-    border: 1px solid #2d3748;
+    font-weight: 800;
+    font-size: 11px;
     cursor: pointer;
+    display: none;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
   }
 
+  #dbCounter {
+    color: #10b981;
+    font-weight: 800;
+    background: #161f2c;
+    padding: 5px 9px;
+    border-radius: 8px;
+    border: 1px solid #10b981;
+    cursor: pointer;
+    font-size: 11px;
+  }
+
+  /* 2. CÍRCULO CENTRAL OOONO */
   .ooono-wrapper {
     flex: 1;
     display: flex;
@@ -170,6 +189,7 @@
     font-weight: 900;
   }
 
+  /* 3. CAJA DE AVISOS */
   .alert-box {
     width: 100%;
     flex-shrink: 0;
@@ -198,6 +218,7 @@
     max-width: 95%;
   }
 
+  /* 4. BOTONERA INFERIOR */
   .actions-grid {
     width: 100%;
     flex-shrink: 0;
@@ -231,7 +252,8 @@
       <div id="statusDot" class="dot"></div>
       <span id="statusText">Toca el centro para iniciar</span>
     </div>
-    <div id="dbCounter" onclick="forceReloadRadars()">📍 75 | 🚁 0</div>
+    <button id="installBtn" onclick="triggerInstall()">📲 INSTALAR</button>
+    <div id="dbCounter" onclick="forceReloadRadars()" title="Toca para recargar">📍 75 | 🚁 0</div>
   </div>
 
   <div class="ooono-wrapper">
@@ -246,7 +268,7 @@
   </div>
 
   <div class="alert-box">
-    <div id="alertTitle" class="alert-title">OOONO Moto CAT Pro</div>
+    <div id="alertTitle" class="alert-title">OOONO Moto CAT v4</div>
     <div id="alertSub" class="alert-sub">Toca el botón central para activar voz y GPS</div>
   </div>
 
@@ -266,13 +288,35 @@
   </div>
 
 <script>
+// 1. REGISTRO DEL SERVICE WORKER Y LIMPIEZA DE CACHÉS ANTIGUOS
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  window.addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('./sw.js');
+      reg.update();
+    } catch (e) {}
   });
 }
 
-// 1. BASE DE DATOS INTERNA AMPLIADA (75 RADARES CLAVE DE BARCELONA Y CATALUNYA)
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installBtn').style.display = 'flex';
+});
+
+async function triggerInstall() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      document.getElementById('installBtn').style.display = 'none';
+    }
+    deferredPrompt = null;
+  }
+}
+
+// 2. BASE DE DATOS INTERNA DE RESPALDO (75 RADARES CLAVE DE BARCELONA Y CATALUNYA)
 const CATALUNYA_STATIC_RADARS = [
   // Túneles y Tramos Barcelona
   { id: 'bcn-1', lat: 41.4162, lon: 2.1592, vmax: 60, type: 'TRAMO', name: 'Túnel de la Rovira' },
@@ -378,6 +422,7 @@ let keepAliveAudio = null;
 let wakeLock = null;
 let lastFetchCoords = { lat: 0, lon: 0 };
 
+// 3. MOTOR DE AUDIO BLUETOOTH CONTINUO (Evita silencios con pantalla apagada o Spotify)
 function startBackgroundAudioLock() {
   if (!audioCtx) {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -460,7 +505,6 @@ async function startSystem() {
 
   speakAlert('OOONO Moto activado. Descargando radares.', 'RADAR');
 
-  // Lanzar descarga inmediata con coordenadas de Barcelona mientras el GPS afina
   fetchLiveRadars(userLat, userLon);
   fetchHelicopters();
 
@@ -511,7 +555,7 @@ function onGpsError(err) {
   document.getElementById('alertSub').innerText = 'Buscando señal GPS exterior...';
 }
 
-// 2. DESCARGA MULTI-SERVIDOR (3 Espejos OSM + 4 Proxies Blitzer.de)
+// 4. DESCARGA MULTI-SERVIDOR AMPLIADA (Nodos + Relaciones de Control de Tramo/Velocidad SCT)
 async function fetchBlitzerPois(minLat, minLon, maxLat, maxLon) {
   const target = `https://cdn2.atudo.net/api/4.0/pois.php?type=0,1,2,3,4,5,6,101,102,103,104,105,106,107&box=${minLat},${minLon},${maxLat},${maxLon}`;
   const proxies = [
@@ -532,8 +576,14 @@ async function fetchBlitzerPois(minLat, minLon, maxLat, maxLon) {
 }
 
 async function fetchOsmRadars(minLat, minLon, maxLat, maxLon) {
-  // Descarga radares de velocidad + cámaras de semáforo en rojo
-  const query = `[out:json][timeout:18];(node["highway"="speed_camera"](${minLat},${minLon},${maxLat},${maxLon});node["enforcement"="maxspeed"](${minLat},${minLon},${maxLat},${maxLon});node["enforcement"="traffic_signals"](${minLat},${minLon},${maxLat},${maxLon}););out body;`;
+  // Busca cámaras fijas, radares de tramo, semáforos y relaciones de control de toda la zona
+  const query = `[out:json][timeout:20];(
+    node["highway"="speed_camera"](${minLat},${minLon},${maxLat},${maxLon});
+    node["enforcement"](${minLat},${minLon},${maxLat},${maxLon});
+    relation["enforcement"="maxspeed"](${minLat},${minLon},${maxLat},${maxLon});
+    relation["enforcement"="average_speed"](${minLat},${minLon},${maxLat},${maxLon});
+  );out center;`;
+
   const mirrors = [
     'https://overpass-api.de/api/interpreter',
     'https://overpass.kumi.systems/api/interpreter',
@@ -549,7 +599,12 @@ async function fetchOsmRadars(minLat, minLon, maxLat, maxLon) {
       if (res.ok) {
         const data = await res.json();
         if (data && data.elements && data.elements.length > 0) {
-          return data.elements;
+          return data.elements.map(el => ({
+            id: el.id,
+            lat: el.lat || (el.center && el.center.lat),
+            lon: el.lon || (el.center && el.center.lon),
+            tags: el.tags || {}
+          }));
         }
       }
     } catch (e) {}
@@ -558,7 +613,7 @@ async function fetchOsmRadars(minLat, minLon, maxLat, maxLon) {
 }
 
 async function fetchLiveRadars(lat, lon) {
-  // Caja de 0.45 grados (~50 km alrededor: cubre toda el Área Metropolitana, Vallès, Maresme, Piera y Garraf de golpe)
+  // Caja de 0.45 grados (~50 km alrededor)
   const delta = 0.45;
   const minLat = (lat - delta).toFixed(4);
   const maxLat = (lat + delta).toFixed(4);
@@ -567,7 +622,6 @@ async function fetchLiveRadars(lat, lon) {
 
   let combined = [...CATALUNYA_STATIC_RADARS, ...customReports];
 
-  // Ejecutamos Blitzer y OpenStreetMap en paralelo
   const [blitzerList, osmList] = await Promise.all([
     fetchBlitzerPois(minLat, minLon, maxLat, maxLon),
     fetchOsmRadars(minLat, minLon, maxLat, maxLon)
@@ -588,17 +642,17 @@ async function fetchLiveRadars(lat, lon) {
   osmList.forEach(el => {
     if (!el.lat || !el.lon) return;
     const isTrafficLight = el.tags && el.tags.enforcement === 'traffic_signals';
+    const isAvgSpeed = el.tags && el.tags.enforcement === 'average_speed';
     combined.push({
       id: 'osm-' + el.id,
       lat: el.lat,
       lon: el.lon,
       vmax: (el.tags && el.tags.maxspeed) ? parseInt(el.tags.maxspeed) : 0,
-      type: isTrafficLight ? 'SEMÁFORO' : 'FIJO',
-      name: (el.tags && el.tags.name) ? el.tags.name : (isTrafficLight ? 'Radar Semáforo' : 'Radar Fijo SCT/OSM')
+      type: isTrafficLight ? 'SEMÁFORO' : (isAvgSpeed ? 'TRAMO' : 'FIJO'),
+      name: (el.tags && el.tags.name) ? el.tags.name : (isTrafficLight ? 'Radar Semáforo' : (isAvgSpeed ? 'Radar de Tramo SCT' : 'Radar Fijo SCT/OSM'))
     });
   });
 
-  // Limpiar duplicados a menos de 35 metros
   const deduplicated = [];
   combined.forEach(item => {
     const exists = deduplicated.some(existing => calcDistance(item.lat, item.lon, existing.lat, existing.lon) < 35);
@@ -647,6 +701,7 @@ async function fetchHelicopters() {
   } catch (e) {}
 }
 
+// 5. MOTOR DE AVISOS A 800m Y 280m CON CONO DE RUMBO
 function checkProximityAlerts() {
   const firstWarnDist = currentSpeed > 70 ? 800 : 480;
   const secondWarnDist = currentSpeed > 70 ? 280 : 170;
@@ -797,7 +852,6 @@ function calcBearing(lat1, lon1, lat2, lon2) {
 window.addEventListener('load', () => {
   activePois = [...CATALUNYA_STATIC_RADARS];
   updateCounterUI();
-  // Descarga automática de los servidores externos nada más abrir la app
   fetchLiveRadars(userLat, userLon);
   if (window.location.search.includes('auto=1')) {
     setTimeout(() => startSystem(), 700);
