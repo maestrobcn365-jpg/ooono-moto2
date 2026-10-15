@@ -11,13 +11,13 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://wsrv.nl/?url=raw.githubusercontent.com/twbs/icons/main/icons/speedometer2.svg&w=192&h=192&output=png&bg=000000",
+      "src": "https://cdn-icons-png.flaticon.com/192/1048/1048315.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://wsrv.nl/?url=raw.githubusercontent.com/twbs/icons/main/icons/speedometer2.svg&w=512&h=512&output=png&bg=000000",
+      "src": "https://cdn-icons-png.flaticon.com/512/1048/1048315.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
