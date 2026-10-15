@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ooono-moto-v11';
+const CACHE_NAME = 'ooono-moto-v12';
 const ASSETS = [
   '/ooono-moto/',
   '/ooono-moto/index.html',
@@ -20,12 +20,13 @@ self.addEventListener('activate', (e) => {
   );
 });
 
+// Escuchar los avisos de radar en segundo plano para mostrarlos en la barra de Android
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
     const { title, body, icon } = event.data;
     self.registration.showNotification(title, {
       body: body,
-      icon: icon || 'https://wsrv.nl/?url=raw.githubusercontent.com/twbs/icons/main/icons/speedometer2.svg&w=192&h=192&output=png&bg=000000',
+      icon: icon || undefined,
       tag: 'ooono-radar-alert',
       renotify: true,
       vibrate: [250, 100, 250],
