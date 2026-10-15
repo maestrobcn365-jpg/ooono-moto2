@@ -42,6 +42,7 @@
     gap: 6px;
   }
 
+  /* 1. BARRA SUPERIOR */
   .top-bar {
     width: 100%;
     flex-shrink: 0;
@@ -94,6 +95,33 @@
     font-size: 11px;
   }
 
+  /* REPRODUCTOR MULTIMEDIA VISIBLE (Fuerza la notificación persistente en la barra de Android) */
+  .media-service-bar {
+    width: 100%;
+    flex-shrink: 0;
+    background: #0d1117;
+    border: 1px solid #1f2937;
+    border-radius: 12px;
+    padding: 5px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .media-label {
+    font-size: 11px;
+    color: #10b981;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  #persistentAudio {
+    height: 26px;
+    width: 160px;
+    filter: invert(1) hue-rotate(180deg);
+  }
+
+  /* 2. CÍRCULO CENTRAL OOONO */
   .ooono-wrapper {
     flex: 1;
     display: flex;
@@ -104,8 +132,8 @@
   }
   .ooono-container {
     position: relative;
-    width: min(58vw, 33dvh, 235px);
-    height: min(58vw, 33dvh, 235px);
+    width: min(55vw, 31dvh, 220px);
+    height: min(55vw, 31dvh, 220px);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -114,7 +142,7 @@
     position: absolute;
     inset: 0;
     border-radius: 50%;
-    border: 14px solid var(--ring-color);
+    border: 13px solid var(--ring-color);
     box-shadow: 0 0 30px var(--ring-glow), inset 0 0 20px var(--ring-glow);
     transition: border-color 0.2s, box-shadow 0.2s;
   }
@@ -141,8 +169,8 @@
   }
 
   .center-button {
-    width: calc(100% - 42px);
-    height: calc(100% - 42px);
+    width: calc(100% - 38px);
+    height: calc(100% - 38px);
     border-radius: 50%;
     background: radial-gradient(circle at 30% 30%, #1f2937, #090d16);
     border: 3px solid #374151;
@@ -154,37 +182,38 @@
     z-index: 2;
     box-shadow: 0 8px 20px rgba(0,0,0,0.85);
     text-align: center;
-    padding: 8px;
+    padding: 6px;
   }
   .center-button:active { transform: scale(0.95); }
   .speed-value {
-    font-size: clamp(40px, 7dvh, 56px);
+    font-size: clamp(38px, 6.5dvh, 52px);
     font-weight: 900;
     line-height: 1;
     letter-spacing: -2px;
   }
   .speed-unit {
-    font-size: 11px;
+    font-size: 10px;
     color: #9ca3af;
     text-transform: uppercase;
-    margin-top: 3px;
+    margin-top: 2px;
     letter-spacing: 1px;
   }
   .limit-badge {
-    margin-top: 5px;
-    width: 42px;
-    height: 42px;
+    margin-top: 4px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     background: #ffffff;
     color: #000000;
-    border: 5px solid #ef4444;
+    border: 4px solid #ef4444;
     display: none;
     justify-content: center;
     align-items: center;
-    font-size: 17px;
+    font-size: 15px;
     font-weight: 900;
   }
 
+  /* 3. CAJA DE AVISOS */
   .alert-box {
     width: 100%;
     flex-shrink: 0;
@@ -199,12 +228,12 @@
     text-align: center;
   }
   .alert-title {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 800;
     color: #10b981;
   }
   .alert-sub {
-    font-size: 12px;
+    font-size: 11px;
     color: #9ca3af;
     margin-top: 2px;
     white-space: nowrap;
@@ -213,6 +242,7 @@
     max-width: 95%;
   }
 
+  /* 4. BOTONERA INFERIOR */
   .actions-grid {
     width: 100%;
     flex-shrink: 0;
@@ -226,7 +256,7 @@
     color: #ffffff;
     padding: 10px 6px;
     border-radius: 11px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
     display: flex;
     align-items: center;
@@ -242,14 +272,15 @@
     background: #2b1115;
     border-color: #dc2626;
     color: #fecaca;
-    padding: 11px;
-    font-size: 14px;
+    padding: 10px;
+    font-size: 13px;
     display: none;
   }
 </style>
 </head>
 <body>
 
+  <!-- BARRA SUPERIOR -->
   <div class="top-bar">
     <div class="status-pill">
       <div id="statusDot" class="dot"></div>
@@ -259,6 +290,15 @@
     <div id="dbCounter" onclick="forceReloadRadars()" title="Toca para recargar">📍 75 | 🚁 0</div>
   </div>
 
+  <!-- REPRODUCTOR MULTIMEDIA FIJO (Crea la notificación persistente en la barra de Android) -->
+  <div class="media-service-bar">
+    <span class="media-label">🛡️ OOONO Servicio 2º Plano</span>
+    <audio id="persistentAudio" controls loop preload="auto">
+      <source src="https://actions.google.com/sounds/v1/ambiences/rain_heavy.ogg" type="audio/ogg">
+    </audio>
+  </div>
+
+  <!-- CÍRCULO CENTRAL OOONO -->
   <div class="ooono-wrapper">
     <div class="ooono-container">
       <div id="ledRing" class="led-ring"></div>
@@ -272,11 +312,13 @@
     </div>
   </div>
 
+  <!-- CAJA DE AVISOS -->
   <div class="alert-box">
-    <div id="alertTitle" class="alert-title">OOONO Moto CAT v6</div>
-    <div id="alertSub" class="alert-sub">Toca para activar (Mantén pulsado para apagar)</div>
+    <div id="alertTitle" class="alert-title">OOONO Moto CAT v7</div>
+    <div id="alertSub" class="alert-sub">Dale al Play arriba o al centro (Mantén para apagar)</div>
   </div>
 
+  <!-- BOTONERA INFERIOR -->
   <div class="actions-grid">
     <button class="btn btn-danger" onclick="reportIncident('MÓVIL', 'Radar Móvil')">
       🚨 Reportar Móvil
@@ -307,7 +349,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// Solicitar permisos nativos de notificación al cargar
 window.addEventListener('load', () => {
   if ('Notification' in window && Notification.permission !== 'granted') {
     Notification.requestPermission();
@@ -424,7 +465,6 @@ let activeHelis = [];
 let alertedStage = new Map();
 let prevDistanceMap = new Map();
 let audioCtx = null;
-let keepAliveAudio = null;
 let wakeLock = null;
 let gpsWatchId = null;
 let heliIntervalId = null;
@@ -453,22 +493,6 @@ function endPressTimer() {
   }
 }
 
-function startBackgroundAudioLock() {
-  if (!audioCtx) {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    audioCtx = new AudioContext();
-  }
-  if (audioCtx.state === 'suspended') {
-    audioCtx.resume();
-  }
-  if (!keepAliveAudio) {
-    keepAliveAudio = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
-    keepAliveAudio.loop = true;
-    keepAliveAudio.volume = 0.01;
-  }
-  keepAliveAudio.play().catch(() => {});
-}
-
 function showPushNotification(title, body) {
   if (swRegistration && swRegistration.active) {
     swRegistration.active.postMessage({ type: 'SHOW_NOTIFICATION', title, body });
@@ -478,7 +502,10 @@ function showPushNotification(title, body) {
 }
 
 function playOoonoBeep(pattern = 'RADAR') {
-  if (!audioCtx) startBackgroundAudioLock();
+  if (!audioCtx) {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AudioContext();
+  }
   if (audioCtx.state === 'suspended') audioCtx.resume();
 
   const now = audioCtx.currentTime;
@@ -532,8 +559,12 @@ async function handleMainButton() {
 }
 
 async function startSystem() {
-  startBackgroundAudioLock();
   systemRunning = true;
+
+  // Arrancar el reproductor nativo multimedia para fijar la notificación en la barra de Android
+  const mediaAudio = document.getElementById('persistentAudio');
+  mediaAudio.volume = 0.05;
+  mediaAudio.play().catch(() => {});
 
   document.getElementById('statusDot').className = 'dot active';
   document.getElementById('statusText').innerText = 'Protección Activa (2º Plano)';
@@ -541,7 +572,7 @@ async function startSystem() {
   document.getElementById('speedUnit').innerText = 'KM/H';
   document.getElementById('stopBtn').style.display = 'flex';
 
-  showPushNotification('🛡️ OOONO Moto Protegido', 'Sistema activo en segundo plano vigilando la ruta.');
+  showPushNotification('🛡️ OOONO Moto Protegido', 'Servicio multimedia activo en la barra de estado.');
 
   if ('wakeLock' in navigator) {
     try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
@@ -577,9 +608,9 @@ async function stopSystem() {
     clearInterval(heliIntervalId);
     heliIntervalId = null;
   }
-  if (keepAliveAudio) {
-    keepAliveAudio.pause();
-  }
+  const mediaAudio = document.getElementById('persistentAudio');
+  mediaAudio.pause();
+
   if (wakeLock !== null) {
     try { await wakeLock.release(); } catch (e) {}
     wakeLock = null;
@@ -602,7 +633,7 @@ async function stopSystem() {
   document.getElementById('limitBadge').style.display = 'none';
   document.getElementById('stopBtn').style.display = 'none';
   document.getElementById('alertTitle').innerText = 'Sistema Apagado';
-  document.getElementById('alertSub').innerText = 'GPS y Audio Bluetooth desconectados.';
+  document.getElementById('alertSub').innerText = 'GPS y Servicio Multimedia detenidos.';
 }
 
 function forceReloadRadars() {
