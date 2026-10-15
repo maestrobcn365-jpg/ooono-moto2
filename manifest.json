@@ -1,10 +1,10 @@
 {
-  "id": "/ooono-moto/",
+  "id": "/ooono-moto2/",
   "name": "OOONO Moto CAT Pro v16",
   "short_name": "OOONO Moto",
   "description": "Avisador de radares y helicópteros para Catalunya",
-  "start_url": "/ooono-moto/index.html?auto=1",
-  "scope": "/ooono-moto/",
+  "start_url": "/ooono-moto2/index.html?auto=1",
+  "scope": "/ooono-moto2/",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",
