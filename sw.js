@@ -1,8 +1,8 @@
-const CACHE_NAME = 'ooono-moto-v12';
+const CACHE_NAME = 'ooono-moto-v15';
 const ASSETS = [
-  '/ooono-moto/',
-  '/ooono-moto/index.html',
-  '/ooono-moto/manifest.json'
+  './',
+  './index.html',
+  './manifest.json'
 ];
 
 self.addEventListener('install', (e) => {
@@ -20,17 +20,13 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// Escuchar los avisos de radar en segundo plano para mostrarlos en la barra de Android
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
-    const { title, body, icon } = event.data;
-    self.registration.showNotification(title, {
-      body: body,
-      icon: icon || undefined,
+    self.registration.showNotification(event.data.title, {
+      body: event.data.body,
+      icon: event.data.icon,
       tag: 'ooono-radar-alert',
-      renotify: true,
-      vibrate: [250, 100, 250],
-      requireInteraction: false
+      renotify: true
     });
   }
 });
