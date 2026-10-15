@@ -1,8 +1,8 @@
 {
   "id": "/ooono-moto/",
-  "name": "OOONO Moto CAT Pro",
+  "name": "OOONO Moto CAT Pro v16",
   "short_name": "OOONO Moto",
-  "description": "Avisador de radares, helicópteros y semáforos para moto y coche en Catalunya",
+  "description": "Avisador de radares y helicópteros para Catalunya",
   "start_url": "/ooono-moto/index.html?auto=1",
   "scope": "/ooono-moto/",
   "display": "standalone",
