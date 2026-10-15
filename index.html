@@ -139,8 +139,8 @@
   }
   .ooono-container {
     position: relative;
-    width: min(55vw, 31dvh, 220px);
-    height: min(55vw, 31dvh, 220px);
+    width: min(54vw, 30dvh, 215px);
+    height: min(54vw, 30dvh, 215px);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -152,6 +152,10 @@
     border: 13px solid var(--ring-color);
     box-shadow: 0 0 30px var(--ring-glow), inset 0 0 20px var(--ring-glow);
     transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .led-ring.active-ring {
+    border-color: #10b981;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.35);
   }
   .led-ring.flash-red { animation: pulseRed 0.4s infinite alternate; }
   .led-ring.flash-orange { animation: pulseOrange 0.75s infinite alternate; }
@@ -272,14 +276,22 @@
   .btn:active { background: #2d3748; transform: scale(0.98); }
   .btn-danger { border-color: #ef4444; color: #fca5a5; }
   .btn-heli { border-color: #a855f7; color: #d8b4fe; }
+  
+  /* BOTÓN DE APAGADO SIEMPRE VISIBLE Y ACCESIBLE */
   .btn-stop {
     grid-column: span 2;
-    background: #2b1115;
-    border-color: #dc2626;
-    color: #fecaca;
-    padding: 10px;
+    background: #3f1116;
+    border: 2px solid #ef4444;
+    color: #ffffff;
+    padding: 11px;
     font-size: 13px;
-    display: none;
+    font-weight: 900;
+    display: flex;
+  }
+  .btn-stop.off-state {
+    background: #111827;
+    border: 1px solid #374151;
+    color: #6b7280;
   }
 </style>
 </head>
@@ -288,36 +300,33 @@
   <div class="top-bar">
     <div class="status-pill">
       <div id="statusDot" class="dot"></div>
-      <span id="statusText">Toca el centro para iniciar</span>
+      <span id="statusText">Sistema Desconectado</span>
     </div>
-    <button id="installBtn" onclick="triggerInstall()">📲 INSTALAR APP</button>
+    <button id="installBtn" onclick="triggerInstall()">📲 INSTALAR</button>
     <div id="dbCounter" onclick="forceReloadRadars()" title="Toca para recargar">📍 74 | 🚁 0</div>
   </div>
 
-  <!-- BARRA DE ESTADO DEL SERVICIO EN SEGUNDO PLANO -->
   <div class="media-service-bar">
     <span class="media-label">🏍️🚗📡 Motor Segundo Plano</span>
-    <span id="bgBadge" class="media-badge">En espera</span>
-    <!-- Reproductor HTML5 oculto con pista silenciosa generada al vuelo para activar la barra de Android -->
+    <span id="bgBadge" class="media-badge">Apagado</span>
     <audio id="persistentAudio" loop style="display:none;"></audio>
   </div>
 
   <div class="ooono-wrapper">
     <div class="ooono-container">
       <div id="ledRing" class="led-ring"></div>
-      <div id="mainBtn" class="center-button"
-           onmousedown="startPressTimer()" onmouseup="endPressTimer()"
-           ontouchstart="startPressTimer()" ontouchend="endPressTimer()">
+      <!-- UN SOLO CLIC LIMPIO: Si está OFF enciende, si está ON apaga -->
+      <div id="mainBtn" class="center-button" onclick="toggleSystemPower()">
         <div id="speedDisplay" class="speed-value">OFF</div>
-        <div id="speedUnit" class="speed-unit">ACTIVAR MOTO</div>
+        <div id="speedUnit" class="speed-unit">TOCA PARA INICIAR</div>
         <div id="limitBadge" class="limit-badge">80</div>
       </div>
     </div>
   </div>
 
   <div class="alert-box">
-    <div id="alertTitle" class="alert-title">OOONO Moto CAT Pro v11</div>
-    <div id="alertSub" class="alert-sub">Toca el centro para activar (Mantén 1.5s para apagar)</div>
+    <div id="alertTitle" class="alert-title">OOONO Moto CAT Pro v12</div>
+    <div id="alertSub" class="alert-sub">Toca el círculo central para ENCENDER o APAGAR</div>
   </div>
 
   <div class="actions-grid">
@@ -333,8 +342,8 @@
     <button class="btn" onclick="togglePocketMode()">
       🌑 Modo Bolsillo
     </button>
-    <button id="stopBtn" class="btn btn-stop" onclick="stopSystem()">
-      ⏹️ APAGAR RADAR Y GPS
+    <button id="stopBtn" class="btn btn-stop off-state" onclick="stopSystem()">
+      ⏹️ APAGAR RADAR Y GPS (DESCONECTAR)
     </button>
   </div>
 
@@ -342,49 +351,43 @@
 let swRegistration = null;
 let customFusedIconPng = '';
 
-/**
- * 1. GENERADOR DE ICONO PNG EN VIVO (MOTO + COCHE + ONDAS DE RADAR)
- * Crea un archivo PNG real en memoria para las notificaciones de Android y la pantalla de bloqueo.
- */
 function generateFusedIconPNG() {
   const canvas = document.createElement('canvas');
   canvas.width = 512;
   canvas.height = 512;
   const ctx = canvas.getContext('2d');
 
-  // Fondo negro redondeado
-  ctx.fillStyle = '#05070a';
+  // Fondo azul noche intenso para que destaque en el cajón de apps
+  ctx.fillStyle = '#0f172a';
   ctx.beginPath();
   ctx.roundRect(0, 0, 512, 512, 110);
   ctx.fill();
 
   // Anillo exterior LED rojo OOONO
   ctx.strokeStyle = '#ff0033';
-  ctx.lineWidth = 28;
+  ctx.lineWidth = 30;
   ctx.beginPath();
   ctx.arc(256, 256, 210, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Ondas de Radar superiores
+  // Ondas de Radar naranjas
   ctx.strokeStyle = '#ff8800';
   ctx.lineWidth = 14;
   ctx.lineCap = 'round';
   [70, 115, 160].forEach(r => {
     ctx.beginPath();
-    ctx.arc(256, 220, r, Math.PI * 1.2, Math.PI * 1.8);
+    ctx.arc(256, 215, r, Math.PI * 1.2, Math.PI * 1.8);
     ctx.stroke();
   });
 
-  // Punto central del radar
   ctx.fillStyle = '#ff0033';
   ctx.beginPath();
-  ctx.arc(256, 220, 18, 0, Math.PI * 2);
+  ctx.arc(256, 215, 18, 0, Math.PI * 2);
   ctx.fill();
 
-  // Textos e iconos fusionados (Moto + Coche + Límite)
   ctx.font = 'bold 95px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('🏍️🚗', 256, 340);
+  ctx.fillText('🏍️🚗', 256, 335);
 
   ctx.fillStyle = '#10b981';
   ctx.font = '900 52px sans-serif';
@@ -395,10 +398,6 @@ function generateFusedIconPNG() {
   document.getElementById('dynamicTouchIcon').href = customFusedIconPng;
 }
 
-/**
- * 2. GENERADOR DE PISTA WAV SILENCIOSA PARA ACTIVAR NOTIFICACIÓN FIJA EN ANDROID
- * Sin lluvia molesta: genera 2 segundos de silencio digital que mantienen vivo el segundo plano
- */
 function createSilentWavUrl() {
   const sampleRate = 8000;
   const numSamples = sampleRate * 2;
@@ -424,19 +423,20 @@ function createSilentWavUrl() {
   return URL.createObjectURL(blob);
 }
 
-// Actualizar la tarjeta permanente de la barra de notificaciones de Android (MediaSession API)
 function updateAndroidStatusBar(title, subtitle) {
   if ('mediaSession' in navigator) {
-    navigator.mediaSession.metadata = new MediaMetadata({
-      title: title,
-      artist: subtitle,
-      album: 'OOONO Moto CAT Pro',
-      artwork: [
-        { src: customFusedIconPng, sizes: '512x512', type: 'image/png' }
-      ]
-    });
-    navigator.mediaSession.setActionHandler('pause', () => stopSystem());
-    navigator.mediaSession.setActionHandler('stop', () => stopSystem());
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: title,
+        artist: subtitle,
+        album: 'OOONO Moto CAT Pro',
+        artwork: [
+          { src: customFusedIconPng, sizes: '512x512', type: 'image/png' }
+        ]
+      });
+      navigator.mediaSession.setActionHandler('pause', () => stopSystem());
+      navigator.mediaSession.setActionHandler('stop', () => stopSystem());
+    } catch (e) {}
   }
 }
 
@@ -467,7 +467,6 @@ async function triggerInstall() {
   }
 }
 
-// 3. MEGA BASE DE DATOS CATALUNYA (Tramos Inicio/Fin, Semáforos Foto-Rojo y Fijos)
 const CATALUNYA_STATIC_RADARS = [
   { id: 't-rovira-ini', lat: 41.4215, lon: 2.1585, vmax: 60, type: 'TRAMO', name: 'Inicio Túnel de la Rovira' },
   { id: 't-rovira-fin', lat: 41.4110, lon: 2.1601, vmax: 60, type: 'TRAMO', name: 'Fin Túnel de la Rovira' },
@@ -576,26 +575,12 @@ let gpsWatchId = null;
 let heliIntervalId = null;
 let lastFetchCoords = { lat: 0, lon: 0 };
 
-let pressTimer = null;
-let longPressTriggered = false;
-
-function startPressTimer() {
-  longPressTriggered = false;
-  pressTimer = setTimeout(() => {
-    if (systemRunning) {
-      longPressTriggered = true;
-      stopSystem();
-    }
-  }, 1400);
-}
-
-function endPressTimer() {
-  if (pressTimer) {
-    clearTimeout(pressTimer);
-    pressTimer = null;
-  }
-  if (!longPressTriggered) {
-    handleMainButton();
+// INTERRUPTOR DIRECTO Y LIMPIO EN EL BOTÓN CENTRAL (Sin dobles eventos táctiles)
+async function toggleSystemPower() {
+  if (!systemRunning) {
+    await startSystem();
+  } else {
+    await stopSystem();
   }
 }
 
@@ -613,36 +598,38 @@ function showPushNotification(title, body) {
 }
 
 function playOoonoBeep(pattern = 'RADAR') {
-  if (!audioCtx) {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    audioCtx = new AudioContext();
-  }
-  if (audioCtx.state === 'suspended') audioCtx.resume();
+  try {
+    if (!audioCtx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioContext();
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
 
-  const now = audioCtx.currentTime;
-  const tone = (freq, start, duration, wave = 'sawtooth') => {
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = wave;
-    osc.frequency.setValueAtTime(freq, now + start);
-    gain.gain.setValueAtTime(1.0, now + start);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + start + duration);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start(now + start);
-    osc.stop(now + start + duration);
-  };
+    const now = audioCtx.currentTime;
+    const tone = (freq, start, duration, wave = 'sawtooth') => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = wave;
+      osc.frequency.setValueAtTime(freq, now + start);
+      gain.gain.setValueAtTime(1.0, now + start);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + start + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now + start);
+      osc.stop(now + start + duration);
+    };
 
-  if (pattern === 'RADAR') {
-    tone(2500, 0, 0.15); tone(2500, 0.20, 0.15); tone(2900, 0.42, 0.28);
-  } else if (pattern === 'OVERSPEED') {
-    tone(3200, 0, 0.14, 'square'); tone(2200, 0.16, 0.14, 'square');
-    tone(3200, 0.32, 0.14, 'square'); tone(2200, 0.48, 0.20, 'square');
-  } else if (pattern === 'HELI') {
-    tone(1200, 0, 0.16); tone(1800, 0.18, 0.16); tone(2700, 0.36, 0.30);
-  } else if (pattern === 'OFF') {
-    tone(1800, 0, 0.18, 'sine'); tone(900, 0.20, 0.28, 'sine');
-  }
+    if (pattern === 'RADAR') {
+      tone(2500, 0, 0.15); tone(2500, 0.20, 0.15); tone(2900, 0.42, 0.28);
+    } else if (pattern === 'OVERSPEED') {
+      tone(3200, 0, 0.14, 'square'); tone(2200, 0.16, 0.14, 'square');
+      tone(3200, 0.32, 0.14, 'square'); tone(2200, 0.48, 0.20, 'square');
+    } else if (pattern === 'HELI') {
+      tone(1200, 0, 0.16); tone(1800, 0.18, 0.16); tone(2700, 0.36, 0.30);
+    } else if (pattern === 'OFF') {
+      tone(1800, 0, 0.18, 'sine'); tone(900, 0.20, 0.28, 'sine');
+    }
+  } catch (e) {}
 }
 
 function speakAlert(text, beepPattern = 'RADAR', pushTitle = '⚠️ Alerta de Radar') {
@@ -662,38 +649,36 @@ function speakAlert(text, beepPattern = 'RADAR', pushTitle = '⚠️ Alerta de R
   }, 700);
 }
 
-async function handleMainButton() {
-  if (!systemRunning) {
-    await startSystem();
-  } else {
-    reportIncident('MÓVIL', 'Radar Móvil');
-  }
-}
-
 async function startSystem() {
   systemRunning = true;
-
-  if ('Notification' in window && Notification.permission !== 'granted') {
-    try { await Notification.requestPermission(); } catch (e) {}
-  }
-
-  const mediaAudio = document.getElementById('persistentAudio');
-  if (!mediaAudio.src) {
-    mediaAudio.src = createSilentWavUrl();
-  }
-  mediaAudio.volume = 0.02;
-  mediaAudio.play().then(() => {
-    const bgBadge = document.getElementById('bgBadge');
-    bgBadge.innerText = 'ACTIVO EN BARRA';
-    bgBadge.className = 'media-badge on';
-    updateAndroidStatusBar('🛡️ OOONO Moto Activo', `Vigilando ${activePois.length} radares en ruta`);
-  }).catch(() => {});
 
   document.getElementById('statusDot').className = 'dot active';
   document.getElementById('statusText').innerText = 'Protección Activa (2º Plano)';
   document.getElementById('speedDisplay').innerText = '0';
-  document.getElementById('speedUnit').innerText = 'KM/H';
-  document.getElementById('stopBtn').style.display = 'flex';
+  document.getElementById('speedUnit').innerText = 'KM/H (TOCA PARA APAGAR)';
+  document.getElementById('ledRing').className = 'led-ring active-ring';
+
+  const stopBtn = document.getElementById('stopBtn');
+  stopBtn.className = 'btn btn-stop';
+  stopBtn.innerText = '⏹️ APAGAR RADAR Y GPS (ACTIVO)';
+
+  if ('Notification' in window && Notification.permission !== 'granted') {
+    Notification.requestPermission().catch(() => {});
+  }
+
+  try {
+    const mediaAudio = document.getElementById('persistentAudio');
+    if (!mediaAudio.src) {
+      mediaAudio.src = createSilentWavUrl();
+    }
+    mediaAudio.volume = 0.02;
+    mediaAudio.play().then(() => {
+      const bgBadge = document.getElementById('bgBadge');
+      bgBadge.innerText = 'ACTIVO EN BARRA';
+      bgBadge.className = 'media-badge on';
+      updateAndroidStatusBar('🛡️ OOONO Moto Activo', `Vigilando ${activePois.length} radares en ruta`);
+    }).catch(() => {});
+  } catch (e) {}
 
   if ('wakeLock' in navigator) {
     try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
@@ -717,48 +702,68 @@ async function startSystem() {
   heliIntervalId = setInterval(fetchHelicopters, 15000);
 }
 
+// APAGADO BLINDADO (A prueba de fallos)
 async function stopSystem() {
   systemRunning = false;
   currentSpeed = 0;
 
-  if (gpsWatchId !== null) {
-    navigator.geolocation.clearWatch(gpsWatchId);
-    gpsWatchId = null;
-  }
-  if (heliIntervalId !== null) {
-    clearInterval(heliIntervalId);
-    heliIntervalId = null;
-  }
-  const mediaAudio = document.getElementById('persistentAudio');
-  mediaAudio.pause();
-
-  const bgBadge = document.getElementById('bgBadge');
-  bgBadge.innerText = 'Apagado';
-  bgBadge.className = 'media-badge';
-
-  if (wakeLock !== null) {
-    try { await wakeLock.release(); } catch (e) {}
-    wakeLock = null;
-  }
-  if ('speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
-  }
-
-  playOoonoBeep('OFF');
-  showPushNotification('⏹️ OOONO Moto Desconectado', 'Protección detenida.');
-
+  // 1. Actualizar interfaz visual inmediatamente
   pocketMode = false;
   document.body.style.opacity = '1';
 
   document.getElementById('statusDot').className = 'dot';
   document.getElementById('statusText').innerText = 'Sistema Desconectado';
   document.getElementById('speedDisplay').innerText = 'OFF';
-  document.getElementById('speedUnit').innerText = 'ACTIVAR MOTO';
+  document.getElementById('speedUnit').innerText = 'TOCA PARA INICIAR';
   document.getElementById('ledRing').className = 'led-ring';
   document.getElementById('limitBadge').style.display = 'none';
-  document.getElementById('stopBtn').style.display = 'none';
+
+  const stopBtn = document.getElementById('stopBtn');
+  stopBtn.className = 'btn btn-stop off-state';
+  stopBtn.innerText = '⏹️ SISTEMA YA APAGADO';
+
+  const bgBadge = document.getElementById('bgBadge');
+  bgBadge.innerText = 'Apagado';
+  bgBadge.className = 'media-badge';
+
   document.getElementById('alertTitle').innerText = 'Sistema Apagado';
-  document.getElementById('alertSub').innerText = 'GPS y Servicio 2º Plano detenidos.';
+  document.getElementById('alertSub').innerText = 'GPS y Servicio 2º Plano detenidos. Cero consumo.';
+
+  // 2. Cortar GPS, temporizadores, voz y audio
+  try {
+    if (gpsWatchId !== null) {
+      navigator.geolocation.clearWatch(gpsWatchId);
+      gpsWatchId = null;
+    }
+  } catch (e) {}
+
+  try {
+    if (heliIntervalId !== null) {
+      clearInterval(heliIntervalId);
+      heliIntervalId = null;
+    }
+  } catch (e) {}
+
+  try {
+    const mediaAudio = document.getElementById('persistentAudio');
+    mediaAudio.pause();
+  } catch (e) {}
+
+  try {
+    if (wakeLock !== null) {
+      await wakeLock.release();
+      wakeLock = null;
+    }
+  } catch (e) {}
+
+  try {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+  } catch (e) {}
+
+  playOoonoBeep('OFF');
+  showPushNotification('⏹️ OOONO Moto Desconectado', 'Protección detenida.');
 }
 
 function forceReloadRadars() {
@@ -1032,7 +1037,7 @@ function checkProximityAlerts() {
     return;
   }
 
-  ring.className = 'led-ring';
+  ring.className = 'led-ring active-ring';
   badge.style.display = 'none';
   if (closestAheadRadar && minAheadDist < 15000) {
     const nextTxt = `Próximo: ${(minAheadDist / 1000).toFixed(1)} km (${closestAheadRadar.name})`;
@@ -1067,7 +1072,7 @@ function testIntercomAudio() {
   document.getElementById('limitBadge').style.display = 'flex';
   document.getElementById('limitBadge').innerText = '80';
   speakAlert('Prueba de intercomunicador. Radar móvil a 300 metros, límite 80.', 'RADAR', '🔊 Prueba de Casco');
-  setTimeout(() => { ring.className = 'led-ring'; }, 4000);
+  setTimeout(() => { ring.className = systemRunning ? 'led-ring active-ring' : 'led-ring'; }, 4000);
 }
 
 let pocketMode = false;
