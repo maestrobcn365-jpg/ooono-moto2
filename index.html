@@ -42,7 +42,6 @@
     gap: 6px;
   }
 
-  /* 1. BARRA SUPERIOR */
   .top-bar {
     width: 100%;
     flex-shrink: 0;
@@ -82,7 +81,6 @@
     display: none;
     align-items: center;
     gap: 4px;
-    box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
   }
 
   #dbCounter {
@@ -96,7 +94,6 @@
     font-size: 11px;
   }
 
-  /* 2. CÍRCULO CENTRAL OOONO */
   .ooono-wrapper {
     flex: 1;
     display: flex;
@@ -188,7 +185,6 @@
     font-weight: 900;
   }
 
-  /* 3. CAJA DE AVISOS */
   .alert-box {
     width: 100%;
     flex-shrink: 0;
@@ -217,7 +213,6 @@
     max-width: 95%;
   }
 
-  /* 4. BOTONERA INFERIOR CON BOTÓN DE APAGADO */
   .actions-grid {
     width: 100%;
     flex-shrink: 0;
@@ -249,7 +244,7 @@
     color: #fecaca;
     padding: 11px;
     font-size: 14px;
-    display: none; /* Solo se muestra cuando el sistema está encendido */
+    display: none;
   }
 </style>
 </head>
@@ -278,8 +273,8 @@
   </div>
 
   <div class="alert-box">
-    <div id="alertTitle" class="alert-title">OOONO Moto CAT v5</div>
-    <div id="alertSub" class="alert-sub">Toca el centro para activar (Mantén pulsado para apagar)</div>
+    <div id="alertTitle" class="alert-title">OOONO Moto CAT v6</div>
+    <div id="alertSub" class="alert-sub">Toca para activar (Mantén pulsado para apagar)</div>
   </div>
 
   <div class="actions-grid">
@@ -301,15 +296,23 @@
   </div>
 
 <script>
-// 1. REGISTRO DEL SERVICE WORKER
+let swRegistration = null;
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('./sw.js');
-      reg.update();
+      swRegistration = await navigator.serviceWorker.register('./sw.js');
+      swRegistration.update();
     } catch (e) {}
   });
 }
+
+// Solicitar permisos nativos de notificación al cargar
+window.addEventListener('load', () => {
+  if ('Notification' in window && Notification.permission !== 'granted') {
+    Notification.requestPermission();
+  }
+});
 
 let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -329,7 +332,6 @@ async function triggerInstall() {
   }
 }
 
-// 2. BASE DE DATOS INTERNA DE RESPALDO (75 RADARES CLAVE DE BARCELONA Y CATALUNYA)
 const CATALUNYA_STATIC_RADARS = [
   { id: 'bcn-1', lat: 41.4162, lon: 2.1592, vmax: 60, type: 'TRAMO', name: 'Túnel de la Rovira' },
   { id: 'bcn-2', lat: 41.3789, lon: 2.1281, vmax: 60, type: 'TRAMO', name: 'Túnel de Badal' },
@@ -428,7 +430,6 @@ let gpsWatchId = null;
 let heliIntervalId = null;
 let lastFetchCoords = { lat: 0, lon: 0 };
 
-// Control de pulsación corta vs larga (1,5s) en el botón central
 let pressTimer = null;
 let longPressTriggered = false;
 
@@ -468,6 +469,14 @@ function startBackgroundAudioLock() {
   keepAliveAudio.play().catch(() => {});
 }
 
+function showPushNotification(title, body) {
+  if (swRegistration && swRegistration.active) {
+    swRegistration.active.postMessage({ type: 'SHOW_NOTIFICATION', title, body });
+  } else if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification(title, { body: body, icon: 'https://cdn-icons-png.flaticon.com/192/2555/2555013.png' });
+  }
+}
+
 function playOoonoBeep(pattern = 'RADAR') {
   if (!audioCtx) startBackgroundAudioLock();
   if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -498,8 +507,9 @@ function playOoonoBeep(pattern = 'RADAR') {
   }
 }
 
-function speakAlert(text, beepPattern = 'RADAR') {
+function speakAlert(text, beepPattern = 'RADAR', pushTitle = '⚠️ Alerta de Radar') {
   playOoonoBeep(beepPattern);
+  showPushNotification(pushTitle, text);
   setTimeout(() => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
@@ -531,11 +541,13 @@ async function startSystem() {
   document.getElementById('speedUnit').innerText = 'KM/H';
   document.getElementById('stopBtn').style.display = 'flex';
 
+  showPushNotification('🛡️ OOONO Moto Protegido', 'Sistema activo en segundo plano vigilando la ruta.');
+
   if ('wakeLock' in navigator) {
     try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
   }
 
-  speakAlert('OOONO Moto activado.', 'RADAR');
+  speakAlert('OOONO Moto activado.', 'RADAR', '🛡️ OOONO Activo');
 
   fetchLiveRadars(userLat, userLon);
   fetchHelicopters();
@@ -553,7 +565,6 @@ async function startSystem() {
   heliIntervalId = setInterval(fetchHelicopters, 15000);
 }
 
-// FUNCIÓN DE APAGADO TOTAL (Desconecta GPS, Audio Bluetooth, Pantalla y Escáner)
 async function stopSystem() {
   systemRunning = false;
   currentSpeed = 0;
@@ -578,8 +589,8 @@ async function stopSystem() {
   }
 
   playOoonoBeep('OFF');
+  showPushNotification('⏹️ OOONO Moto Desconectado', 'Protección detenida.');
 
-  // Restaurar brillo si estaba en modo bolsillo
   pocketMode = false;
   document.body.style.opacity = '1';
 
@@ -591,7 +602,7 @@ async function stopSystem() {
   document.getElementById('limitBadge').style.display = 'none';
   document.getElementById('stopBtn').style.display = 'none';
   document.getElementById('alertTitle').innerText = 'Sistema Apagado';
-  document.getElementById('alertSub').innerText = 'GPS y Audio Bluetooth desconectados. Cero consumo.';
+  document.getElementById('alertSub').innerText = 'GPS y Audio Bluetooth desconectados.';
 }
 
 function forceReloadRadars() {
@@ -837,11 +848,11 @@ function checkProximityAlerts() {
 
     if (currentStage === 0) {
       alertedStage.set(closestAheadRadar.id, 1);
-      speakAlert(`Atención, radar ${closestAheadRadar.type.toLowerCase()} a ${distRounded} metros${limitText}`, isOverspeed ? 'OVERSPEED' : 'RADAR');
+      speakAlert(`Atención, radar ${closestAheadRadar.type.toLowerCase()} a ${distRounded} metros${limitText}`, isOverspeed ? 'OVERSPEED' : 'RADAR', `⚠️ Radar ${closestAheadRadar.type} a ${distRounded}m`);
     } else if (currentStage === 1 && minAheadDist <= secondWarnDist) {
       alertedStage.set(closestAheadRadar.id, 2);
       if (isOverspeed) {
-        speakAlert(`Frena, límite ${closestAheadRadar.vmax}`, 'OVERSPEED');
+        speakAlert(`Frena, límite ${closestAheadRadar.vmax}`, 'OVERSPEED', `🚨 ¡Frena! Límite ${closestAheadRadar.vmax}`);
       } else {
         playOoonoBeep('RADAR');
       }
@@ -858,7 +869,7 @@ function checkProximityAlerts() {
 
     if (!alertedStage.has(closestHeli.id)) {
       alertedStage.set(closestHeli.id, 1);
-      speakAlert(`Alerta aérea. Helicóptero a ${kmDist} kilómetros.`, 'HELI');
+      speakAlert(`Alerta aérea. Helicóptero a ${kmDist} kilómetros.`, 'HELI', `🚁 Helicóptero a ${kmDist} km`);
     }
     return;
   }
@@ -886,7 +897,7 @@ function reportIncident(type, label) {
   localStorage.setItem('ooono_custom_reports', JSON.stringify(customReports));
   activePois.push(newPoi);
   updateCounterUI();
-  speakAlert(`${label} guardado.`, type === 'HELI' ? 'HELI' : 'RADAR');
+  speakAlert(`${label} guardado.`, type === 'HELI' ? 'HELI' : 'RADAR', `📍 ${label} Registrado`);
 }
 
 function testIntercomAudio() {
@@ -895,7 +906,7 @@ function testIntercomAudio() {
   ring.className = 'led-ring flash-red';
   document.getElementById('limitBadge').style.display = 'flex';
   document.getElementById('limitBadge').innerText = '80';
-  speakAlert('Prueba de intercomunicador. Radar móvil a 300 metros, límite 80.', 'RADAR');
+  speakAlert('Prueba de intercomunicador. Radar móvil a 300 metros, límite 80.', 'RADAR', '🔊 Prueba de Casco');
   setTimeout(() => { ring.className = 'led-ring'; }, 4000);
 }
 
@@ -903,7 +914,7 @@ let pocketMode = false;
 function togglePocketMode() {
   pocketMode = !pocketMode;
   document.body.style.opacity = pocketMode ? '0.08' : '1';
-  speakAlert(pocketMode ? 'Modo bolsillo activado' : 'Pantalla normal', 'RADAR');
+  speakAlert(pocketMode ? 'Modo bolsillo activado' : 'Pantalla normal', 'RADAR', pocketMode ? '🌑 Modo Bolsillo' : '☀️ Pantalla Activa');
 }
 
 function updateCounterUI() {
